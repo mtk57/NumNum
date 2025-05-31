@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Number Puzzle Game - Collision Logic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #1a202c; /* Tailwind gray-900 */
+            color: #e2e8f0; /* Tailwind gray-300 */
+            margin: 0;
+            overflow: hidden;
+            touch-action: none; /* Prevent default touch actions like pull-to-refresh */
+        }
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #2d3748; /* Tailwind gray-800 */
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 400px; /* Max width of the game container */
+            box-sizing: border-box;
+        }
+        #mission-display {
+            font-size: 1.1rem; 
+            font-weight: bold;
+            margin-bottom: 12px;
+            text-align: center;
+            color: #90cdf4; /* Tailwind blue-400 */
+            min-height: 3em; 
+        }
+        #score-display {
+            font-size: 1rem; 
+            margin-bottom: 12px;
+        }
+        #grid-area {
+            position: relative;
+            width: calc(100% - 10px); /* Adjust for padding/border */
+            max-width: 320px; /* Max size for the grid itself */
+            aspect-ratio: 1 / 1; /* Make it square */
+            margin-bottom: 15px;
+        }
+        #grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* GRID_SIZE will be 4 */
+            grid-template-rows: repeat(4, 1fr);   /* GRID_SIZE will be 4 */
+            gap: 8px;
+            width: 100%;
+            height: 100%;
+            position: relative; 
+            z-index: 1;
+            user-select: none;
+            -webkit-user-select: none; 
+            -ms-user-select: none; 
+        }
+        .cell {
+            background-color: #4a5568; /* Tailwind gray-600 */
+            border-radius: 50%; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.75rem; 
+            font-weight: bold;
+            color: #edf2f7; /* Tailwind gray-200 */
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.2s ease, opacity 0.3s ease;
+            position: relative; 
+            aspect-ratio: 1 / 1; 
+        }
+        .cell.selected {
+            background-color: #63b3ed; /* Tailwind blue-400 */
+            transform: scale(1.1);
+            color: #1a202c;
+        }
+        .cell.clearing {
+            opacity: 0;
+            transform: scale(0.5) rotate(360deg);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        .cell.falling {
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .cell.new-cell {
+            opacity: 0;
+            transform: translateY(-30px) scale(0.5); /* Start slightly higher */
+            animation: newCellAppear 0.5s forwards cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes newCellAppear {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .debug-collision-circle {
+            position: absolute;
+            border: 1px dashed rgba(255, 0, 0, 0.5);
+            border-radius: 50%;
+            pointer-events: none; 
+            z-index: 3; 
+            box-sizing: border-box;
+        }
+        #line-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; 
+            z-index: 2;
+        }
+        #message-area {
+            min-height: 1.5em;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #68d391; /* Tailwind green-400 */
+        }
+        #controls-area {
+            display: flex;
+            gap: 10px; 
+            margin-top: 10px;
+        }
+        .action-button {
+            background-color: #4299e1; /* Tailwind blue-500 */
+            color: white;
+            padding: 10px 15px; 
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem; 
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .action-button:hover {
+            background-color: #3182ce; /* Tailwind blue-600 */
+        }
+
+        @media (max-width: 360px) { /* Responsive adjustments for smaller screens */
+            .cell {
+                font-size: 1.25rem; 
+            }
+            #mission-display {
+                font-size: 0.9rem; 
+            }
+             .action-button {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="mission-display">ミッションを読み込み中...</div>
+        <div id="score-display">スコア: <span id="score">0</span></div>
+        <div id="grid-area">
+            <canvas id="line-canvas"></canvas>
+            <div id="grid-container"></div>
+        </div>
+        <div id="message-area"></div>
+        <div id="controls-area">
+            <button id="give-up-button" class="action-button">ギブアップ</button>
+        </div>
+    </div>
+
+    <script>
+        const GRID_SIZE = 4; 
+        const MIN_NUM = 1;
+        const MAX_NUM = 9;
+        const TARGET_MISSIONS_PER_LEVEL = 10;
+        const DEBUG_SHOW_COLLISION_CIRCLES = false; 
+
+        const gridContainer = document.getElementById('grid-container');
+        const lineCanvas = document.getElementById('line-canvas');
+        const canvasCtx = lineCanvas.getContext('2d');
+        const missionDisplay = document.getElementById('mission-display');
+        const scoreDisplay = document.getElementById('score');
+        const messageArea = document.getElementById('message-area');
+        const giveUpButton = document.getElementById('give-up-button');
+        const gridArea = document.getElementById('grid-area');
+
+        let cellsData = []; 
+        let selectedCells = []; 
+        let currentMission = { type: 'sum', target: 0, text: "" }; // Initialize with sum type
+        let score = 0;
+        let isDrawing = false;
+        let missionsSinceLastLevelUp = 0;
+        let currentLevel = 1;
+
+        function initGame() {
+            gridContainer.innerHTML = ''; 
+            cellsData = [];
+            document.querySelectorAll('.debug-collision-circle').forEach(el => el.remove());
+
+            missionsSinceLastLevelUp = 0;
+            currentLevel = 1;
+            score = 0; 
+            currentMission.target = 0; // Reset mission target for new game, forces new target generation
+
+            for (let r = 0; r < GRID_SIZE; r++) {
+                const rowData = [];
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cellValue = Math.floor(Math.random() * (MAX_NUM - MIN_NUM + 1)) + MIN_NUM;
+                    const cellElement = createCellElement(r, c, cellValue);
+                    
+                    const cellObj = { 
+                        value: cellValue,
+                        element: cellElement, 
+                        row: r, 
+                        col: c, 
+                        id: `cell-${r}-${c}-${Date.now()}`, 
+                        centerX: 0, 
+                        centerY: 0, 
+                        collisionRadius: 0 
+                    };
+                    gridContainer.appendChild(cellElement);
+                    rowData.push(cellObj);
+                }
+                cellsData.push(rowData);
+            }
+            resizeCanvasAndCells(); 
+            updateAllCellDisplays(); 
+            generateNewMission(); 
+            updateScoreDisplay();
+            clearSelection(); 
+            window.addEventListener('resize', resizeCanvasAndCells); 
+        }
+
+        function createCellElement(row, col, value) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            cell.dataset.row = row; 
+            cell.dataset.col = col;
+            return cell;
+        }
+        
+        function updateAllCellDisplays() {
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cellObj = cellsData[r][c];
+                    if (cellObj && cellObj.element) { 
+                         cellObj.element.textContent = cellObj.value === null ? '' : cellObj.value.toString();
+                    }
+                }
+            }
+        }
+        
+        function resizeCanvasAndCells() {
+            const gridRect = gridContainer.getBoundingClientRect();
+            lineCanvas.width = gridRect.width;
+            lineCanvas.height = gridRect.height;
+
+            document.querySelectorAll('.debug-collision-circle').forEach(el => el.remove());
+
+            if (!cellsData || cellsData.length === 0) return; 
+
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cellObj = cellsData[r][c];
+                    if (!cellObj || !cellObj.element) continue; 
+
+                    const cellRect = cellObj.element.getBoundingClientRect();
+                    
+                    cellObj.centerX = (cellRect.left - gridRect.left) + (cellRect.width / 2);
+                    cellObj.centerY = (cellRect.top - gridRect.top) + (cellRect.height / 2);
+                    cellObj.collisionRadius = cellRect.width * 0.40; 
+
+                    if (DEBUG_SHOW_COLLISION_CIRCLES) {
+                        const debugCircle = document.createElement('div');
+                        debugCircle.classList.add('debug-collision-circle');
+                        debugCircle.style.width = `${cellObj.collisionRadius * 2}px`;
+                        debugCircle.style.height = `${cellObj.collisionRadius * 2}px`;
+                        debugCircle.style.left = `${cellObj.centerX - cellObj.collisionRadius}px`;
+                        debugCircle.style.top = `${cellObj.centerY - cellObj.collisionRadius}px`;
+                        gridArea.appendChild(debugCircle);
+                    }
+                }
+            }
+            drawLines(); 
+        }
+
+        function updateMissionDisplay() {
+            if (currentMission && currentMission.text) {
+                missionDisplay.textContent = `レベル ${currentLevel} (${missionsSinceLastLevelUp}/${TARGET_MISSIONS_PER_LEVEL}) - ${currentMission.text}`;
+            } else {
+                missionDisplay.textContent = `レベル ${currentLevel} (${missionsSinceLastLevelUp}/${TARGET_MISSIONS_PER_LEVEL}) - ミッション準備中...`;
+            }
+        }
+
+        function generateNewMission() {
+            let targetValue;
+            let missionText = "";
+            
+            // Generate a new target sum if it's the start of a new level (missionsSinceLastLevelUp is 0)
+            // or if the currentMission.target is 0 (e.g., game start or after give up that resets target).
+            if (missionsSinceLastLevelUp === 0 || currentMission.target === 0) {
+                let potentialSolutionCells = [];
+                let availableCells = cellsData.flat().filter(c => c && c.value !== null);
+
+                if (availableCells.length < 2) { 
+                    missionText = "数字が足りません！"; 
+                    currentMission = { type: 'sum', target: 0, text: missionText }; 
+                    updateMissionDisplay();
+                    return;
+                }
+
+                let numToPick = Math.floor(Math.random() * 2) + 2; 
+                numToPick = Math.min(numToPick, availableCells.length);
+                
+                for(let i=0; i<numToPick; i++) {
+                     if(availableCells.length === 0) break;
+                    potentialSolutionCells.push(availableCells.splice(Math.floor(Math.random() * availableCells.length), 1)[0]);
+                }
+
+                if (potentialSolutionCells.length < 2 && cellsData.flat().filter(c => c && c.value !== null).length >=2) { 
+                     potentialSolutionCells = cellsData.flat().filter(c => c && c.value !== null).slice(0,2);
+                } else if (potentialSolutionCells.length < 2) {
+                     missionText = "ミッション作成不可";
+                     currentMission = { type: 'sum', target: 0, text: missionText };
+                     updateMissionDisplay();
+                     return;
+                }
+
+                targetValue = potentialSolutionCells.reduce((acc, cell) => acc + cell.value, 0);
+                if (targetValue > 50 && potentialSolutionCells.length > 2) targetValue = Math.floor(Math.random() * 30) + 10; 
+                else if (targetValue > 30 && potentialSolutionCells.length === 2) targetValue = Math.floor(Math.random() * 20) + 5;
+                else if (targetValue < 5) targetValue = Math.floor(Math.random() * 5) + 5; 
+
+                currentMission.target = targetValue; 
+            }
+            currentMission.type = 'sum';
+            missionText = `合計して ${currentMission.target} にしよう！`;
+            currentMission.text = missionText;
+            updateMissionDisplay();
+        }
+
+        function checkMission() {
+            if (selectedCells.length < 2) return false; 
+
+            const values = selectedCells.map(cell => cell.value);
+            const result = values.reduce((acc, val) => acc + val, 0);
+            
+            return result === currentMission.target;
+        }
+
+        function handleInteractionStart(event) {
+            if (gridContainer.contains(event.target) || event.target === gridContainer) {
+                 event.preventDefault(); 
+            }
+            clearSelection();
+            isDrawing = true;
+            addCellToSelection(event);
+        }
+
+        function handleInteractionMove(event) {
+            if (!isDrawing) return;
+             if (gridContainer.contains(event.target) || event.target === gridContainer || event.type === 'touchmove') { 
+                event.preventDefault(); 
+            }
+            addCellToSelection(event);
+        }
+
+        function handleInteractionEnd(event) {
+            if (!isDrawing && selectedCells.length === 0) {
+                clearSelection(); 
+                return;
+            }
+            if (isDrawing) {
+                isDrawing = false;
+            } else {
+                 if (selectedCells.length === 0) return;
+            }
+
+            if (checkMission()) {
+                messageArea.textContent = "ミッション成功！";
+                score += selectedCells.length * 10; 
+                updateScoreDisplay();
+                
+                missionsSinceLastLevelUp++;
+                if (missionsSinceLastLevelUp >= TARGET_MISSIONS_PER_LEVEL) {
+                    currentLevel++;
+                    missionsSinceLastLevelUp = 0; 
+                    currentMission.target = 0; // Force new target generation for the new level
+                    messageArea.textContent = `レベル ${currentLevel -1} クリア！レベル ${currentLevel} スタート！`;
+                }
+                processClearedCells(); 
+            } else {
+                if (selectedCells.length > 0) { 
+                    messageArea.textContent = "残念！もう一度挑戦。";
+                    setTimeout(() => {
+                        clearSelection(); 
+                        if (messageArea.textContent === "残念！もう一度挑戦。") {
+                             messageArea.textContent = "";
+                        }
+                    }, 1000); 
+                } else {
+                    clearSelection();
+                }
+            }
+            
+            const levelUpMessage = `レベル ${currentLevel -1} クリア！レベル ${currentLevel} スタート！`;
+            if (messageArea.textContent !== levelUpMessage && messageArea.textContent !== "残念！もう一度挑戦。") { 
+                setTimeout(() => { 
+                    if (messageArea.textContent !== levelUpMessage && messageArea.textContent !== "残念！もう一度挑戦。") { 
+                        messageArea.textContent = ""; 
+                    }
+                }, 2000); 
+            }
+        }
+        
+        function handleGiveUp() {
+            clearSelection();
+            currentLevel++; // MODIFIED: Advance to the next level
+            missionsSinceLastLevelUp = 0; // MODIFIED: Reset mission count for the new level
+            currentMission.target = 0; // MODIFIED: Force new target generation for the new level
+            
+            generateNewMission(); 
+            messageArea.textContent = `次のレベル (${currentLevel}) に進みます！`;
+            setTimeout(() => { 
+                if (messageArea.textContent === `次のレベル (${currentLevel}) に進みます！`) {
+                    messageArea.textContent = ""; 
+                }
+            }, 2000);
+        }
+        giveUpButton.addEventListener('click', handleGiveUp);
+        
+        function addCellToSelection(event) {
+            const targetCellData = getCellFromEvent(event); 
+            if (!targetCellData) return; 
+
+            if (selectedCells.length > 0) {
+                const lastCell = selectedCells[selectedCells.length - 1];
+                if (lastCell.id === targetCellData.id) return; 
+            }
+            
+            const alreadySelectedInPath = selectedCells.find(sc => sc.id === targetCellData.id);
+            if (alreadySelectedInPath) return; 
+
+            selectedCells.push(targetCellData);
+            if(targetCellData.element) targetCellData.element.classList.add('selected');
+            drawLines();
+        }
+        
+        function getCellFromEvent(event) {
+            const gridRect = gridContainer.getBoundingClientRect();
+            let clientX, clientY;
+
+            if (event.touches && event.touches.length > 0) {
+                clientX = event.touches[0].clientX;
+                clientY = event.touches[0].clientY;
+            } else if (event.changedTouches && event.changedTouches.length > 0) { 
+                clientX = event.changedTouches[0].clientX;
+                clientY = event.changedTouches[0].clientY;
+            } else {
+                clientX = event.clientX;
+                clientY = event.clientY;
+            }
+
+            const pointerX = clientX - gridRect.left;
+            const pointerY = clientY - gridRect.top;
+
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cell = cellsData[r][c];
+                    if (!cell) continue; 
+                    const distance = Math.sqrt(
+                        Math.pow(pointerX - cell.centerX, 2) + Math.pow(pointerY - cell.centerY, 2)
+                    );
+                    if (distance < cell.collisionRadius) {
+                        return cell; 
+                    }
+                }
+            }
+            return null; 
+        }
+
+        function clearSelection() {
+            selectedCells.forEach(cell => {
+                if (cell && cell.element) cell.element.classList.remove('selected');
+            });
+            selectedCells = [];
+            clearCanvas();
+        }
+        
+        function drawLines() {
+            clearCanvas();
+            if (selectedCells.length < 2) return;
+
+            canvasCtx.beginPath();
+            canvasCtx.strokeStyle = '#f0e68c'; 
+            canvasCtx.lineWidth = Math.max(2, gridContainer.offsetWidth / 75); 
+            canvasCtx.lineCap = 'round';
+            canvasCtx.lineJoin = 'round';
+
+            for (let i = 0; i < selectedCells.length; i++) {
+                const cell = selectedCells[i];
+                const x = cell.centerX;
+                const y = cell.centerY;
+
+                if (i === 0) {
+                    canvasCtx.moveTo(x, y);
+                } else {
+                    canvasCtx.lineTo(x, y);
+                }
+            }
+            canvasCtx.stroke();
+        }
+
+        function clearCanvas() {
+            canvasCtx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
+        }
+
+        async function processClearedCells() {
+            const cellsToClear = [...selectedCells]; 
+            clearSelection(); 
+
+            const removalPromises = cellsToClear.map(cell => {
+                if(cell && cell.element) {
+                    cell.element.classList.add('clearing');
+                    return new Promise(resolve => setTimeout(resolve, 400)); 
+                }
+                return Promise.resolve();
+            });
+            await Promise.all(removalPromises);
+
+            cellsToClear.forEach(clearedCell => {
+                if (clearedCell && typeof clearedCell.row === 'number' && typeof clearedCell.col === 'number' &&
+                    cellsData[clearedCell.row] && cellsData[clearedCell.row][clearedCell.col]) {
+                    cellsData[clearedCell.row][clearedCell.col].value = null; 
+                    if(clearedCell.element) {
+                        clearedCell.element.classList.remove('clearing');
+                    }
+                }
+            });
+
+            await applyGravityAndRefill(); 
+            generateNewMission(); 
+        }
+
+        async function applyGravityAndRefill() {
+            const animationPromises = [];
+            for (let c = 0; c < GRID_SIZE; c++) {
+                let emptySlotsInCol = 0;
+                for (let r = GRID_SIZE - 1; r >= 0; r--) {
+                    if (!cellsData[r] || !cellsData[r][c]) continue; 
+                    const currentCellData = cellsData[r][c];
+
+                    if (currentCellData.value === null) {
+                        emptySlotsInCol++;
+                    } else if (emptySlotsInCol > 0) {
+                        const newRow = r + emptySlotsInCol;
+                        const cellToMove = cellsData[r][c]; 
+                        
+                        if (!cellToMove.element) continue; 
+
+                        const cellHeight = cellToMove.element.offsetHeight;
+                        const gap = parseFloat(window.getComputedStyle(gridContainer).gap) || 8; 
+                        const fallDistance = emptySlotsInCol * (cellHeight + gap);
+                        
+                        cellToMove.element.style.transform = `translateY(${fallDistance}px)`;
+                        cellToMove.element.classList.add('falling');
+                        
+                        cellsData[newRow][c] = cellToMove; 
+                        cellsData[r][c] = { 
+                            value: null, 
+                            element: cellsData[r][c].element, 
+                            row: r, col: c, id: `empty-temp-${r}-${c}-${Date.now()}`,
+                            centerX: cellsData[r][c].centerX, centerY: cellsData[r][c].centerY, collisionRadius: cellsData[r][c].collisionRadius
+                        };
+                        cellToMove.row = newRow; 
+                        
+                        animationPromises.push(new Promise(resolve => {
+                            setTimeout(() => {
+                                if (cellToMove.element) { 
+                                    cellToMove.element.style.transform = '';
+                                    cellToMove.element.classList.remove('falling');
+                                }
+                                resolve();
+                            }, 500); 
+                        }));
+                    }
+                }
+
+                for (let i = 0; i < emptySlotsInCol; i++) {
+                    const newRowForNewCell = i; 
+                    const newValue = Math.floor(Math.random() * (MAX_NUM - MIN_NUM + 1)) + MIN_NUM;
+                    const cellToFill = cellsData[newRowForNewCell][c]; 
+                    if (!cellToFill || !cellToFill.element) continue; 
+
+                    cellToFill.value = newValue; 
+                    cellToFill.element.classList.add('new-cell'); 
+                    
+                    animationPromises.push(new Promise(resolve => {
+                        setTimeout(() => {
+                            if (cellToFill.element) { 
+                                cellToFill.element.classList.remove('new-cell');
+                            }
+                            resolve();
+                        }, 500); 
+                    }));
+                }
+            }
+            
+            await Promise.all(animationPromises);
+
+            const tempGridDataValuesOnly = cellsData.map(row => 
+                row.map(cell => ({ value: cell.value })) 
+            );
+
+            gridContainer.innerHTML = ''; 
+            const newMasterCellsData = []; 
+
+            for(let r=0; r<GRID_SIZE; r++) {
+                const newRowData = [];
+                for(let c=0; c<GRID_SIZE; c++) {
+                    const valueToSet = tempGridDataValuesOnly[r][c].value; 
+                    const newElement = createCellElement(r,c, valueToSet); 
+                    gridContainer.appendChild(newElement); 
+                    newRowData.push({
+                        value: valueToSet,
+                        element: newElement, 
+                        row: r, col: c,
+                        id: `cell-${r}-${c}-${Date.now()}`, 
+                        centerX: 0, centerY: 0, collisionRadius: 0
+                    });
+                }
+                newMasterCellsData.push(newRowData);
+            }
+            cellsData = newMasterCellsData; 
+            resizeCanvasAndCells(); 
+            updateAllCellDisplays(); 
+        }
+
+        function updateScoreDisplay() {
+            scoreDisplay.textContent = score;
+        }
+
+        const eventAreaForInteraction = document.getElementById('grid-area');
+
+        eventAreaForInteraction.addEventListener('mousedown', handleInteractionStart);
+        document.addEventListener('mousemove', handleInteractionMove);
+        document.addEventListener('mouseup', handleInteractionEnd); 
+
+        eventAreaForInteraction.addEventListener('touchstart', handleInteractionStart, { passive: false });
+        document.addEventListener('touchmove', handleInteractionMove, { passive: false });
+        document.addEventListener('touchend', handleInteractionEnd);
+        document.addEventListener('touchcancel', handleInteractionEnd); 
+
+        initGame();
+    </script>
+</body>
+</html>
