@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Number Puzzle Game - Collision Logic</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Simple Number Connect (ver 0.1)</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SimpleNumConnect">
+    <link rel="apple-touch-icon" href="icons/icon-180x180.png">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -654,6 +658,18 @@
         document.addEventListener('touchcancel', handleInteractionEnd); 
 
         initGame();
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js') // sw.jsのパスを指定
+                    .then(registration => {
+                        console.log('Service Worker registered: ', registration);
+                    })
+                    .catch(error => {
+                        console.log('Service Worker registration failed: ', error);
+                    });
+            });
+        }
     </script>
 </body>
 </html>
