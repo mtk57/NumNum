@@ -1,7 +1,7 @@
 // sw.js
 
 // キャッシュ名（バージョンを更新すると古いキャッシュと区別できる）
-const CACHE_NAME = 'simple-number-connect-cache-v1'; // プロジェクトに合わせてバージョンを更新してください
+const CACHE_NAME = 'simple-number-connect-cache-v7'; // プロジェクトに合わせてバージョンを更新してください
 
 // キャッシュするファイルのリスト
 // index.html はルートパス '/' としてキャッシュすることが多いです。

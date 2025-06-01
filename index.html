@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Simple Number Connect (ver 0.5)</title>
+    <title>Simple Number Connect (ver 0.7)</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -252,6 +252,7 @@
         let missionsSinceLastLevelUp = 0;
         let currentLevel = 1;
 
+        // Initialize the game
         function initGame() {
             gridContainer.innerHTML = '';
             cellsData = [];
@@ -274,17 +275,17 @@
                         element: cellElement,
                         row: r,
                         col: c,
-                        id: `cell-${r}-${c}-${Date.now()}`,
-                        centerX: 0,
-                        centerY: 0,
-                        collisionRadius: 0
+                        id: `cell-${r}-${c}-${Date.now()}`, // Unique ID for each cell instance
+                        centerX: 0, // Will be calculated on resize/init
+                        centerY: 0, // Will be calculated on resize/init
+                        collisionRadius: 0 // Will be calculated on resize/init
                     };
                     gridContainer.appendChild(cellElement);
                     rowData.push(cellObj);
                 }
                 cellsData.push(rowData);
             }
-            resizeCanvasAndCells();
+            resizeCanvasAndCells(); // Calculate initial positions and sizes
             updateAllCellDisplays();
             generateNewMission();
             updateScoreDisplay();
@@ -292,14 +293,17 @@
             window.addEventListener('resize', resizeCanvasAndCells);
         }
 
+        // Create a single cell DOM element
         function createCellElement(row, col, value) {
             const cell = document.createElement('div');
             cell.classList.add('cell');
             cell.dataset.row = row;
             cell.dataset.col = col;
+            // Value will be set by updateAllCellDisplays
             return cell;
         }
 
+        // Update the text content of all cells based on cellsData
         function updateAllCellDisplays() {
             for (let r = 0; r < GRID_SIZE; r++) {
                 for (let c = 0; c < GRID_SIZE; c++) {
@@ -311,11 +315,13 @@
             }
         }
 
+        // Recalculate canvas size and cell positions/collision areas
         function resizeCanvasAndCells() {
             const gridRect = gridContainer.getBoundingClientRect();
             lineCanvas.width = gridRect.width;
             lineCanvas.height = gridRect.height;
 
+            // Clear old debug circles if any
             document.querySelectorAll('.debug-collision-circle').forEach(el => el.remove());
 
             if (!cellsData || cellsData.length === 0) return;
@@ -327,8 +333,10 @@
 
                     const cellRect = cellObj.element.getBoundingClientRect();
 
+                    // Calculate center relative to the gridContainer
                     cellObj.centerX = (cellRect.left - gridRect.left) + (cellRect.width / 2);
                     cellObj.centerY = (cellRect.top - gridRect.top) + (cellRect.height / 2);
+                    // Adjust collision radius for better touch accuracy (e.g., 40% of width)
                     cellObj.collisionRadius = cellRect.width * 0.40;
 
                     if (DEBUG_SHOW_COLLISION_CIRCLES) {
@@ -338,13 +346,15 @@
                         debugCircle.style.height = `${cellObj.collisionRadius * 2}px`;
                         debugCircle.style.left = `${cellObj.centerX - cellObj.collisionRadius}px`;
                         debugCircle.style.top = `${cellObj.centerY - cellObj.collisionRadius}px`;
-                        gridArea.appendChild(debugCircle);
+                        gridArea.appendChild(debugCircle); // Append to gridArea for correct positioning
                     }
                 }
             }
-            drawLines();
+            drawLines(); // Redraw lines if any selection exists
         }
 
+
+        // Update the mission display text
         function updateMissionDisplay() {
             if (currentMission && currentMission.text) {
                 missionDisplay.textContent = `レベル ${currentLevel} (${missionsSinceLastLevelUp}/${TARGET_MISSIONS_PER_LEVEL}) - ${currentMission.text}`;
@@ -353,53 +363,63 @@
             }
         }
 
+        // Generate a new mission
         function generateNewMission() {
             let targetValue;
             let missionText = "";
 
+            // Only generate a completely new target if it's the start of a level or previous mission was invalid
             if (missionsSinceLastLevelUp === 0 || currentMission.target === 0) {
                 let potentialSolutionCells = [];
                 let availableCells = cellsData.flat().filter(c => c && c.value !== null);
 
                 if (availableCells.length < 2) {
-                    missionText = "数字が足りません！";
+                    missionText = "数字が足りません！"; // Not enough numbers to form a mission
                     currentMission = { type: 'sum', target: 0, text: missionText };
                     updateMissionDisplay();
                     return;
                 }
 
-                let numToPick = Math.floor(Math.random() * 2) + 2;
-                numToPick = Math.min(numToPick, availableCells.length);
+                // Try to pick 2 or 3 cells for the sum
+                let numToPick = Math.floor(Math.random() * 2) + 2; // 2 or 3
+                numToPick = Math.min(numToPick, availableCells.length); // Don't pick more than available
 
+                // Randomly pick cells for the sum
                 for(let i=0; i<numToPick; i++) {
-                     if(availableCells.length === 0) break;
+                     if(availableCells.length === 0) break; // Should not happen if initial check passes
                     potentialSolutionCells.push(availableCells.splice(Math.floor(Math.random() * availableCells.length), 1)[0]);
                 }
 
+                // Fallback if somehow not enough cells were picked but grid has enough
                 if (potentialSolutionCells.length < 2 && cellsData.flat().filter(c => c && c.value !== null).length >=2) {
-                     potentialSolutionCells = cellsData.flat().filter(c => c && c.value !== null).slice(0,2);
+                     potentialSolutionCells = cellsData.flat().filter(c => c && c.value !== null).slice(0,2); // Pick first two
                 } else if (potentialSolutionCells.length < 2) {
-                     missionText = "ミッション作成不可";
+                     missionText = "ミッション作成不可"; // Cannot create mission
                      currentMission = { type: 'sum', target: 0, text: missionText };
                      updateMissionDisplay();
                      return;
                 }
 
+
                 targetValue = potentialSolutionCells.reduce((acc, cell) => acc + cell.value, 0);
-                if (targetValue > 50 && potentialSolutionCells.length > 2) targetValue = Math.floor(Math.random() * 30) + 10;
-                else if (targetValue > 30 && potentialSolutionCells.length === 2) targetValue = Math.floor(Math.random() * 20) + 5;
-                else if (targetValue < 5) targetValue = Math.floor(Math.random() * 5) + 5;
+                // Adjust target if it's too high or too low to be interesting
+                if (targetValue > 50 && potentialSolutionCells.length > 2) targetValue = Math.floor(Math.random() * 30) + 10; // Cap for 3+ cells
+                else if (targetValue > 30 && potentialSolutionCells.length === 2) targetValue = Math.floor(Math.random() * 20) + 5; // Cap for 2 cells
+                else if (targetValue < 5) targetValue = Math.floor(Math.random() * 5) + 5; // Min target sum
 
                 currentMission.target = targetValue;
             }
+            // For now, only sum missions
             currentMission.type = 'sum';
             missionText = `合計して ${currentMission.target} にしよう！`;
             currentMission.text = missionText;
             updateMissionDisplay();
         }
 
+
+        // Check if the current selection meets the mission criteria
         function checkMission() {
-            if (selectedCells.length < 2) return false;
+            if (selectedCells.length < 2) return false; // Need at least 2 cells
 
             const values = selectedCells.map(cell => cell.value);
             const result = values.reduce((acc, val) => acc + val, 0);
@@ -407,7 +427,9 @@
             return result === currentMission.target;
         }
 
+        // Handle start of interaction (mousedown or touchstart)
         function handleInteractionStart(event) {
+            // Prevent default only if target is within grid or is the grid itself to allow page scroll otherwise
             if (gridContainer.contains(event.target) || event.target === gridContainer) {
                  event.preventDefault();
             }
@@ -416,53 +438,58 @@
             addCellToSelection(event);
         }
 
+        // Handle movement during interaction (mousemove or touchmove)
         function handleInteractionMove(event) {
             if (!isDrawing) return;
-             if (gridContainer.contains(event.target) || event.target === gridContainer || event.type === 'touchmove') {
+             // Prevent default for touchmove to avoid scrolling while drawing
+             if (gridContainer.contains(event.target) || event.target === gridContainer || event.type === 'touchmove') { // Added event.type check
                 event.preventDefault();
             }
             addCellToSelection(event);
         }
 
+        // Handle end of interaction (mouseup or touchend)
         function handleInteractionEnd(event) {
-            if (!isDrawing && selectedCells.length === 0) {
+            if (!isDrawing && selectedCells.length === 0) { // No drawing was happening and nothing selected
                 clearSelection();
                 return;
             }
-            if (isDrawing) {
+            if (isDrawing) { // If drawing was active, now it's not
                 isDrawing = false;
-            } else {
-                 if (selectedCells.length === 0) return;
+            } else { // If not drawing but some cells were selected (e.g. quick tap then release)
+                 if (selectedCells.length === 0) return; // Nothing to process
             }
+
 
             if (checkMission()) {
                 messageArea.textContent = "ミッション成功！";
-                score += selectedCells.length * 10;
+                score += selectedCells.length * 10; // Score based on number of cells
                 updateScoreDisplay();
-                drawLines();
+                drawLines(); // Keep lines visible until cells clear
 
                 missionsSinceLastLevelUp++;
                 if (missionsSinceLastLevelUp >= TARGET_MISSIONS_PER_LEVEL) {
                     currentLevel++;
                     missionsSinceLastLevelUp = 0;
-                    currentMission.target = 0;
+                    currentMission.target = 0; // Force new mission target for new level
                     messageArea.textContent = `レベル ${currentLevel -1} クリア！レベル ${currentLevel} スタート！`;
                 }
                 processClearedCells();
             } else {
-                if (selectedCells.length > 0) {
+                if (selectedCells.length > 0) { // Only show "try again" if something was selected
                     messageArea.textContent = "残念！もう一度挑戦。";
                     setTimeout(() => {
-                        clearSelection();
-                        if (messageArea.textContent === "残念！もう一度挑戦。") {
+                        clearSelection(); // Clear selection after a delay
+                        if (messageArea.textContent === "残念！もう一度挑戦。") { // Clear message if it hasn't changed
                              messageArea.textContent = "";
                         }
                     }, 1000);
                 } else {
-                    clearSelection();
+                    clearSelection(); // If nothing was selected, just clear (redundant but safe)
                 }
             }
 
+            // Clear non-persistent messages after a delay
             const levelUpMessage = `レベル ${currentLevel -1} クリア！レベル ${currentLevel} スタート！`;
             if (messageArea.textContent !== levelUpMessage && messageArea.textContent !== "残念！もう一度挑戦。") {
                 setTimeout(() => {
@@ -473,13 +500,14 @@
             }
         }
 
+        // Handle "Give Up" button click
         function handleGiveUp() {
             clearSelection();
-            currentLevel++;
+            currentLevel++; // Advance to next level
             missionsSinceLastLevelUp = 0;
-            currentMission.target = 0;
+            currentMission.target = 0; // Force new mission target for new level
 
-            generateNewMission();
+            generateNewMission(); // Generate a mission for the new level
             messageArea.textContent = `次のレベル (${currentLevel}) に進みます！`;
             setTimeout(() => {
                 if (messageArea.textContent === `次のレベル (${currentLevel}) に進みます！`) {
@@ -489,71 +517,94 @@
         }
         giveUpButton.addEventListener('click', handleGiveUp);
 
+
+        // Add a cell to the current selection path
         function addCellToSelection(event) {
             const targetCellData = getCellFromEvent(event);
-            if (!targetCellData) return;
+            if (!targetCellData) return; // No cell found at pointer/touch location
 
             if (selectedCells.length > 0) {
                 const lastCell = selectedCells[selectedCells.length - 1];
+                // Don't add if it's the same as the last cell
                 if (lastCell.id === targetCellData.id) return;
+
+                // *** MODIFIED: Allow diagonal connections ***
+                const rowDiff = Math.abs(lastCell.row - targetCellData.row);
+                const colDiff = Math.abs(lastCell.col - targetCellData.col);
+
+                // If the difference in row or column is greater than 1, it's not adjacent.
+                // This allows horizontal, vertical, and diagonal connections (rowDiff <= 1 && colDiff <= 1)
+                if (rowDiff > 1 || colDiff > 1) {
+                    return; // Not adjacent (neither cardinally nor diagonally)
+                }
             }
 
+            // Check if this cell is already in the current selection path (to prevent loops)
             const alreadySelectedInPath = selectedCells.find(sc => sc.id === targetCellData.id);
-            if (alreadySelectedInPath) return;
+            if (alreadySelectedInPath) return; // Already selected in this path
 
             selectedCells.push(targetCellData);
             if(targetCellData.element) targetCellData.element.classList.add('selected');
             drawLines();
         }
 
+        // Get cell data object from a browser event (mouse or touch)
         function getCellFromEvent(event) {
             const gridRect = gridContainer.getBoundingClientRect();
             let clientX, clientY;
 
+            // Determine coordinates from event type
             if (event.touches && event.touches.length > 0) {
                 clientX = event.touches[0].clientX;
                 clientY = event.touches[0].clientY;
-            } else if (event.changedTouches && event.changedTouches.length > 0) {
+            } else if (event.changedTouches && event.changedTouches.length > 0) { // For touchend
                 clientX = event.changedTouches[0].clientX;
                 clientY = event.changedTouches[0].clientY;
-            } else {
+            }
+            else { // Mouse event
                 clientX = event.clientX;
                 clientY = event.clientY;
             }
 
+            // Calculate pointer position relative to the grid container
             const pointerX = clientX - gridRect.left;
             const pointerY = clientY - gridRect.top;
 
+            // Find which cell the pointer is over using collision detection
             for (let r = 0; r < GRID_SIZE; r++) {
                 for (let c = 0; c < GRID_SIZE; c++) {
                     const cell = cellsData[r][c];
-                    if (!cell) continue;
+                    if (!cell) continue; // Skip if cell data is missing (should not happen in normal flow)
+                    // Calculate distance from pointer to cell center
                     const distance = Math.sqrt(
                         Math.pow(pointerX - cell.centerX, 2) + Math.pow(pointerY - cell.centerY, 2)
                     );
+                    // If distance is within the cell's collision radius, it's a hit
                     if (distance < cell.collisionRadius) {
                         return cell;
                     }
                 }
             }
-            return null;
+            return null; // No cell found at this position
         }
 
+        // Clear the current selection and remove visual highlights
         function clearSelection() {
             selectedCells.forEach(cell => {
                 if (cell && cell.element) cell.element.classList.remove('selected');
             });
             selectedCells = [];
-            clearCanvas();
+            clearCanvas(); // Clear lines from canvas
         }
 
+        // Draw lines connecting the centers of selected cells
         function drawLines() {
             clearCanvas();
-            if (selectedCells.length < 2) return;
+            if (selectedCells.length < 2) return; // Need at least two cells to draw a line
 
             canvasCtx.beginPath();
-            canvasCtx.strokeStyle = '#63b3ed';
-            canvasCtx.lineWidth = Math.max(3, gridContainer.offsetWidth / 70);
+            canvasCtx.strokeStyle = '#63b3ed'; // Line color (Tailwind blue-400)
+            canvasCtx.lineWidth = Math.max(3, gridContainer.offsetWidth / 70); // Responsive line width
             canvasCtx.lineCap = 'round';
             canvasCtx.lineJoin = 'round';
 
@@ -563,52 +614,56 @@
                 const y = cell.centerY;
 
                 if (i === 0) {
-                    canvasCtx.moveTo(x, y);
+                    canvasCtx.moveTo(x, y); // Start path at the first cell
                 } else {
-                    canvasCtx.lineTo(x, y);
+                    canvasCtx.lineTo(x, y); // Draw line to subsequent cells
                 }
             }
-            canvasCtx.stroke();
+            canvasCtx.stroke(); // Render the path
         }
 
+        // Clear the line canvas
         function clearCanvas() {
             canvasCtx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
         }
 
+        // Create particle effects for a cleared cell
         function createParticles(cell) {
-            if (!cell || !gridArea) return;
+            if (!cell || !gridArea) return; // Ensure cell and gridArea exist
 
-            const startX = cell.centerX;
+            const startX = cell.centerX; // Center of the cell in canvas coordinates
             const startY = cell.centerY;
 
             for (let i = 0; i < NUM_PARTICLES_PER_CELL; i++) {
                 const particle = document.createElement('div');
                 particle.classList.add('particle');
 
-                // Use defined base size for particle positioning
-                // Note: If CSS @media query changes particle size, this JS const needs to be aware or CSS needs to handle centering.
-                // For now, using the base size.
-                const particleSize = PARTICLE_BASE_SIZE_PX;
+                // Position particle at the center of the cell initially
+                // The particle's own size needs to be accounted for if its origin is top-left
+                const particleSize = PARTICLE_BASE_SIZE_PX; // Use the defined base size
                 particle.style.left = `${startX - particleSize / 2}px`;
                 particle.style.top = `${startY - particleSize / 2}px`;
 
-                const angle = Math.random() * Math.PI * 2;
-                const distance = Math.random() * 60 + 30; 
-                const midDistance = distance * 0.5; 
+                // Randomize particle animation properties
+                const angle = Math.random() * Math.PI * 2; // Random direction
+                const distance = Math.random() * 60 + 30; // Random travel distance (30-90px)
+                const midDistance = distance * 0.5; // Midpoint for arc-like motion
 
                 const endX = Math.cos(angle) * distance;
                 const endY = Math.sin(angle) * distance;
-                const midX = Math.cos(angle) * midDistance;
-                const midY = Math.sin(angle) * midDistance;
+                const midX = Math.cos(angle) * midDistance; // Midpoint X for animation
+                const midY = Math.sin(angle) * midDistance; // Midpoint Y for animation
 
+                // Set CSS custom properties for the animation
                 particle.style.setProperty('--particle-x', `${endX}px`);
                 particle.style.setProperty('--particle-y', `${endY}px`);
                 particle.style.setProperty('--particle-mid-x', `${midX}px`);
                 particle.style.setProperty('--particle-mid-y', `${midY}px`);
-                particle.style.animationDelay = `${Math.random() * 0.25}s`; 
+                particle.style.animationDelay = `${Math.random() * 0.25}s`; // Stagger particle animations
 
-                gridArea.appendChild(particle);
+                gridArea.appendChild(particle); // Add particle to the grid area
 
+                // Remove particle from DOM after animation completes
                 particle.addEventListener('animationend', () => {
                     if (particle.parentNode) {
                         particle.parentNode.removeChild(particle);
@@ -618,165 +673,197 @@
         }
 
 
+        // Process cells that were cleared (animation, removal, gravity, refill)
         async function processClearedCells() {
-            const cellsToClear = [...selectedCells];
-            cellsToClear.forEach(cell => createParticles(cell));
+            const cellsToClear = [...selectedCells]; // Copy selected cells before clearing selection
+            cellsToClear.forEach(cell => createParticles(cell)); // Create particles for each cleared cell
 
-            const tempSelectedForLine = [...selectedCells];
-            selectedCells = [];
+            const tempSelectedForLine = [...selectedCells]; // Keep a copy for line clearing if needed
+            selectedCells = []; // Clear the main selection immediately for responsiveness
 
+            // Animate clearing effect
             const removalPromises = cellsToClear.map(cell => {
                 if(cell && cell.element) {
                     cell.element.classList.add('clearing');
-                    return new Promise(resolve => setTimeout(resolve, 600));
+                    return new Promise(resolve => setTimeout(resolve, 600)); // Duration of clearing animation
                 }
                 return Promise.resolve();
             });
             await Promise.all(removalPromises);
 
+            // Mark cells as empty in the data model
             cellsToClear.forEach(clearedCell => {
                 if (clearedCell && typeof clearedCell.row === 'number' && typeof clearedCell.col === 'number' &&
                     cellsData[clearedCell.row] && cellsData[clearedCell.row][clearedCell.col]) {
-                    cellsData[clearedCell.row][clearedCell.col].value = null;
+                    cellsData[clearedCell.row][clearedCell.col].value = null; // Mark as empty
                     if(clearedCell.element) {
-                        clearedCell.element.classList.remove('clearing');
+                        clearedCell.element.classList.remove('clearing'); // Clean up class
+                        // Element will be reused or replaced by applyGravityAndRefill
                     }
                 }
             });
 
+            // Clear selection visual styles from the temporary list
              tempSelectedForLine.forEach(cell => {
                  if (cell && cell.element) cell.element.classList.remove('selected');
             });
+            // Clear canvas lines slightly after, ensuring selection is empty
             setTimeout(() => {
                  if(selectedCells.length === 0) clearCanvas();
             }, 100);
 
 
-            await applyGravityAndRefill();
-            generateNewMission();
+            await applyGravityAndRefill(); // Apply gravity and refill empty spots
+            generateNewMission(); // Generate a new mission
         }
 
+        // Apply gravity to cells and refill empty spots from the top
         async function applyGravityAndRefill() {
             const animationPromises = [];
-            for (let c = 0; c < GRID_SIZE; c++) {
+
+            // Apply gravity: move existing cells down
+            for (let c = 0; c < GRID_SIZE; c++) { // Iterate through each column
                 let emptySlotsInCol = 0;
-                for (let r = GRID_SIZE - 1; r >= 0; r--) {
-                    if (!cellsData[r] || !cellsData[r][c]) continue;
+                for (let r = GRID_SIZE - 1; r >= 0; r--) { // Iterate from bottom to top of the column
+                    if (!cellsData[r] || !cellsData[r][c]) continue; // Should not happen
                     const currentCellData = cellsData[r][c];
 
-                    if (currentCellData.value === null) {
+                    if (currentCellData.value === null) { // If this slot is empty
                         emptySlotsInCol++;
-                    } else if (emptySlotsInCol > 0) {
-                        const newRow = r + emptySlotsInCol;
+                    } else if (emptySlotsInCol > 0) { // If this slot has a number and there are empty slots below it
+                        const newRow = r + emptySlotsInCol; // Target row for this cell to fall to
                         const cellToMove = cellsData[r][c];
 
-                        if (!cellToMove.element) continue;
+                        if (!cellToMove.element) continue; // Should have an element
 
+                        // Calculate fall distance for animation
                         const cellHeight = cellToMove.element.offsetHeight;
-                        const gap = parseFloat(window.getComputedStyle(gridContainer).gap) || 8;
+                        const gap = parseFloat(window.getComputedStyle(gridContainer).gap) || 8; // Get gap from CSS
                         const fallDistance = emptySlotsInCol * (cellHeight + gap);
 
+                        // Animate the fall
                         cellToMove.element.style.transform = `translateY(${fallDistance}px)`;
                         cellToMove.element.classList.add('falling');
 
+                        // Update data structure: move cell data to new row, mark old slot as temporarily empty
                         cellsData[newRow][c] = cellToMove;
-                        cellsData[r][c] = {
+                        cellsData[r][c] = { // Create a temporary placeholder for the old slot
                             value: null,
-                            element: cellsData[r][c].element,
+                            element: cellsData[r][c].element, // Keep the element reference for now
                             row: r, col: c, id: `empty-temp-${r}-${c}-${Date.now()}`,
                             centerX: cellsData[r][c].centerX, centerY: cellsData[r][c].centerY, collisionRadius: cellsData[r][c].collisionRadius
                         };
-                        cellToMove.row = newRow;
+                        cellToMove.row = newRow; // Update cell's row property
 
                         animationPromises.push(new Promise(resolve => {
-                            setTimeout(() => {
+                            setTimeout(() => { // After animation duration
                                 if (cellToMove.element) {
-                                    cellToMove.element.style.transform = '';
+                                    cellToMove.element.style.transform = ''; // Reset transform
                                     cellToMove.element.classList.remove('falling');
                                 }
                                 resolve();
-                            }, 500);
+                            }, 500); // Duration of falling animation
                         }));
                     }
                 }
 
+                // Refill: add new cells at the top of the column for each empty slot
                 for (let i = 0; i < emptySlotsInCol; i++) {
-                    const newRowForNewCell = i;
+                    const newRowForNewCell = i; // New cells appear at the top (index 0, 1, etc.)
                     const newValue = Math.floor(Math.random() * (MAX_NUM - MIN_NUM + 1)) + MIN_NUM;
-                    const cellToFill = cellsData[newRowForNewCell][c];
-                    if (!cellToFill || !cellToFill.element) continue;
+                    const cellToFill = cellsData[newRowForNewCell][c]; // Get the cell data for the slot to be filled
 
-                    cellToFill.value = newValue;
-                    cellToFill.element.classList.add('new-cell');
+                    if (!cellToFill || !cellToFill.element) continue; // Should have an element
+
+                    cellToFill.value = newValue; // Assign new value
+                    // Element's text content will be updated in updateAllCellDisplays later
+                    cellToFill.element.classList.add('new-cell'); // Add class for appearance animation
 
                     animationPromises.push(new Promise(resolve => {
-                        setTimeout(() => {
+                        setTimeout(() => { // After animation duration
                             if (cellToFill.element) {
                                 cellToFill.element.classList.remove('new-cell');
                             }
                             resolve();
-                        }, 500);
+                        }, 500); // Duration of new cell animation
                     }));
                 }
             }
 
-            await Promise.all(animationPromises);
+            await Promise.all(animationPromises); // Wait for all fall/refill animations to complete
 
+            // --- Rebuild grid for consistency after complex DOM manipulations ---
+            // This step is crucial to ensure the DOM and cellsData are perfectly in sync,
+            // especially regarding element references and their order in the grid container.
+
+            // 1. Store the logical state (values) of the grid
             const tempGridDataValuesOnly = cellsData.map(row =>
                 row.map(cell => ({ value: cell.value }))
             );
 
+            // 2. Clear the visual grid container
             gridContainer.innerHTML = '';
-            const newMasterCellsData = [];
+            const newMasterCellsData = []; // This will become the new cellsData
 
+            // 3. Re-create cell elements and rebuild cellsData
             for(let r=0; r<GRID_SIZE; r++) {
                 const newRowData = [];
                 for(let c=0; c<GRID_SIZE; c++) {
                     const valueToSet = tempGridDataValuesOnly[r][c].value;
-                    const newElement = createCellElement(r,c, valueToSet);
-                    gridContainer.appendChild(newElement);
+                    const newElement = createCellElement(r,c, valueToSet); // Create a fresh DOM element
+                    gridContainer.appendChild(newElement); // Add to the DOM in correct order
 
-                    const originalCellData = cellsData[r][c];
+                    // Check if this cell was one of the "new-cell" animated ones to briefly re-apply the class for visual continuity
+                    // This is a bit of a workaround for the full rebuild.
+                    const originalCellData = cellsData[r][c]; // Old cellsData still has some info
                     if(originalCellData && originalCellData.element && originalCellData.element.classList.contains('new-cell')){
-                        newElement.classList.add('new-cell');
-                        setTimeout(() => newElement.classList.remove('new-cell'), 500);
+                        newElement.classList.add('new-cell'); // Re-apply if it was a new cell
+                        setTimeout(() => newElement.classList.remove('new-cell'), 500); // And remove it after animation would have finished
                     }
 
                     newRowData.push({
                         value: valueToSet,
-                        element: newElement,
+                        element: newElement, // Link to the new DOM element
                         row: r, col: c,
-                        id: `cell-${r}-${c}-${Date.now()}`,
-                        centerX: 0, centerY: 0, collisionRadius: 0
+                        id: `cell-${r}-${c}-${Date.now()}`, // New unique ID
+                        centerX: 0, centerY: 0, collisionRadius: 0 // Will be recalculated
                     });
                 }
                 newMasterCellsData.push(newRowData);
             }
-            cellsData = newMasterCellsData;
+            cellsData = newMasterCellsData; // Update the master data structure
+
+            // 4. Recalculate positions and update display for the new grid
             resizeCanvasAndCells();
             updateAllCellDisplays();
         }
 
+        // Update the score display on the page
         function updateScoreDisplay() {
             scoreDisplay.textContent = score;
         }
 
-        const eventAreaForInteraction = document.getElementById('grid-area');
+        // --- Event Listeners ---
+        const eventAreaForInteraction = document.getElementById('grid-area'); // Use grid-area for more reliable touch boundaries
 
+        // Mouse events
         eventAreaForInteraction.addEventListener('mousedown', handleInteractionStart);
-        document.addEventListener('mousemove', handleInteractionMove);
-        document.addEventListener('mouseup', handleInteractionEnd);
+        document.addEventListener('mousemove', handleInteractionMove); // Listen on document for mousemove outside grid
+        document.addEventListener('mouseup', handleInteractionEnd);   // Listen on document for mouseup outside grid
 
+        // Touch events
         eventAreaForInteraction.addEventListener('touchstart', handleInteractionStart, { passive: false });
-        document.addEventListener('touchmove', handleInteractionMove, { passive: false });
+        document.addEventListener('touchmove', handleInteractionMove, { passive: false }); // Listen on document for touchmove
         document.addEventListener('touchend', handleInteractionEnd);
-        document.addEventListener('touchcancel', handleInteractionEnd);
+        document.addEventListener('touchcancel', handleInteractionEnd); // Handle cancelled touches
 
+        // --- Initialize Game ---
         initGame();
 
+        // --- Service Worker Registration (Optional PWA feature) ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
+                navigator.serviceWorker.register('./sw.js') // Assuming sw.js is in the same directory
                     .then(registration => {
                         console.log('Service Worker registered: ', registration);
                     })
