@@ -2,7 +2,7 @@
 
 // キャッシュ名（バージョンを更新すると古いキャッシュと区別できる）
 // ユーザーが新しいバージョンをデプロイする際は、このバージョン番号を必ず変更してください (例: v1.2 -> v1.3)
-const CACHE_NAME = 'simple-number-connect-cache-v1.3'; // ← 新しいバージョン名に変更
+const CACHE_NAME = 'simple-number-connect-cache-v1.4'; // ← 新しいバージョン名に変更
 
 // キャッシュするファイルのリスト
 const urlsToCache = [
