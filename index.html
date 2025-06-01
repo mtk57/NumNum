@@ -179,6 +179,8 @@
         }
         #controls-area {
             display: flex;
+            flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+            justify-content: center; /* Center buttons */
             gap: 10px;
             margin-top: 10px;
         }
@@ -271,6 +273,7 @@
                 left: 5px;
             }
             #update-notification {
+                width: calc(100% - 20px);
                 top: 10px;
                 left: 10px;
                 right: 10px;
@@ -296,9 +299,10 @@
         <div id="message-area"></div>
         <div id="controls-area">
             <button id="give-up-button" class="action-button">ギブアップ</button>
-        </div>
-        <div id="version-display">ver 1.4</div>
-    </div> <script>
+            <button id="manual-check-update-button" class="action-button">更新を確認</button> </div>
+        <div id="version-display">ver 1.5</div> </div>
+
+    <script>
         // --- 定数とグローバル変数 ---
         const GRID_SIZE = 4;
         const MIN_NUM = 1;
@@ -318,6 +322,7 @@
         const gridArea = document.getElementById('grid-area');
         const updateNotification = document.getElementById('update-notification');
         const updateButton = document.getElementById('update-button');
+        const manualCheckUpdateButton = document.getElementById('manual-check-update-button'); // 追加
 
         let cellsData = [];
         let selectedCells = [];
@@ -328,10 +333,31 @@
         let currentLevel = 1;
 
         // Service Worker 関連の変数
-        let newWorker = null; // 新しくインストールされた、または待機中のService Worker
-        let refreshing = false; // ページリロード処理中かどうかのフラグ
+        let newWorker = null; 
+        let refreshing = false; 
 
-        // --- ゲーム初期化とコアロジック (変更なしのため大部分省略) ---
+        // --- ゲームロジック (変更なしのため大部分省略) ---
+        function initGame() { /* ... */ }
+        function createCellElement(row, col, value) { /* ... */ }
+        function updateAllCellDisplays() { /* ... */ }
+        function resizeCanvasAndCells() { /* ... */ }
+        function updateMissionDisplay() { /* ... */ }
+        function generateNewMission() { /* ... */ }
+        function checkMission() { /* ... */ }
+        function handleInteractionStart(event) { /* ... */ }
+        function handleInteractionMove(event) { /* ... */ }
+        function handleInteractionEnd(event) { /* ... */ }
+        function handleGiveUp() { /* ... */ }
+        function addCellToSelection(event) { /* ... */ }
+        function getCellFromEvent(event) { /* ... */ }
+        function clearSelection() { /* ... */ }
+        function drawLines() { /* ... */ }
+        function clearCanvas() { /* ... */ }
+        function createParticles(cell) { /* ... */ }
+        async function processClearedCells() { /* ... */ }
+        async function applyGravityAndRefill() { /* ... */ }
+        function updateScoreDisplay() { /* ... */ }
+
         // (省略したゲームロジックの関数群をここにペーストしてください)
         // Initialize the game
         function initGame() {
@@ -356,24 +382,23 @@
                         element: cellElement,
                         row: r,
                         col: c,
-                        id: `cell-${r}-${c}-${Date.now()}`, // Unique ID for each cell instance
-                        centerX: 0, // Will be calculated on resize/init
-                        centerY: 0, // Will be calculated on resize/init
-                        collisionRadius: 0 // Will be calculated on resize/init
+                        id: `cell-${r}-${c}-${Date.now()}`, 
+                        centerX: 0, 
+                        centerY: 0, 
+                        collisionRadius: 0 
                     };
                     gridContainer.appendChild(cellElement);
                     rowData.push(cellObj);
                 }
                 cellsData.push(rowData);
             }
-            resizeCanvasAndCells(); // Calculate initial positions and sizes
+            resizeCanvasAndCells(); 
             updateAllCellDisplays();
             generateNewMission();
             updateScoreDisplay();
             clearSelection();
         }
 
-        // Create a single cell DOM element
         function createCellElement(row, col, value) {
             const cell = document.createElement('div');
             cell.classList.add('cell');
@@ -382,7 +407,6 @@
             return cell;
         }
 
-        // Update the text content of all cells based on cellsData
         function updateAllCellDisplays() {
             if (!cellsData || cellsData.length === 0) return;
             for (let r = 0; r < GRID_SIZE; r++) {
@@ -395,7 +419,6 @@
             }
         }
 
-        // Recalculate canvas size and cell positions/collision areas
         function resizeCanvasAndCells() {
             const gridRect = gridContainer.getBoundingClientRect();
             lineCanvas.width = gridRect.width;
@@ -429,8 +452,6 @@
             drawLines();
         }
 
-
-        // Update the mission display text
         function updateMissionDisplay() {
             if (currentMission && currentMission.text) {
                 missionDisplay.textContent = `レベル ${currentLevel} (${missionsSinceLastLevelUp}/${TARGET_MISSIONS_PER_LEVEL}) - ${currentMission.text}`;
@@ -439,7 +460,6 @@
             }
         }
 
-        // Generate a new mission
         function generateNewMission() {
             let targetValue;
             let missionText = "";
@@ -809,33 +829,25 @@
             updateNotification.classList.remove('show');
         }
 
-        // 「更新」ボタンがクリックされたときの処理
         function handleUpdate() {
-            console.log('[PWA Update] Update button clicked.');
+            console.log('[PWA Update] Update button (in notification) clicked.');
             if (newWorker) {
-                // 新しいService WorkerにskipWaitingを指示
-                // これにより、新しいSWがactivateイベントを発火し、その後controllerchangeイベントがトリガーされる
                 newWorker.postMessage({ action: 'skipWaiting' });
                 console.log('[PWA Update] Sent skipWaiting message to new worker.');
             }
-            hideUpdateNotification(); // 通知を隠す
+            hideUpdateNotification(); 
         }
 
-        // Service Workerのインストール状態を追跡する関数
         function trackInstalling(worker) {
             worker.addEventListener('statechange', () => {
                 console.log('[PWA Update] Installing worker state changed:', worker.state);
                 if (worker.state === 'installed') {
-                    // 新しいSWがインストール完了し、待機状態(waiting)になった
-                    // registration.waiting にこの worker がセットされるはず
-                    // newWorker = worker; // newWorker は既に registration.installing でセットされていることが多い
                     if (navigator.serviceWorker.controller) {
-                        // 既にページがSWによって制御されている場合、更新通知を表示
-                        console.log('[PWA Update] New worker installed and ready to activate. Showing notification.');
+                        console.log('[PWA Update] New worker installed and ready to activate. Setting newWorker and showing notification.');
+                        newWorker = worker; // Ensure newWorker is set to the successfully installed worker
                         showUpdateNotification();
                     } else {
-                        // 初回インストール時は通知不要、ページリロードで新しいSWが有効になる
-                        console.log('[PWA Update] New worker installed (initial install). No notification needed yet.');
+                        console.log('[PWA Update] New worker installed (initial install). No notification needed yet. It will activate on next load or after clients.claim().');
                     }
                 }
             });
@@ -851,8 +863,71 @@
         document.addEventListener('touchend', handleInteractionEnd);
         document.addEventListener('touchcancel', handleInteractionEnd);
         giveUpButton.addEventListener('click', handleGiveUp);
-        updateButton.addEventListener('click', handleUpdate);
-        window.addEventListener('resize', resizeCanvasAndCells); // リサイズイベントリスナー
+        updateButton.addEventListener('click', handleUpdate); // Notification's update button
+        window.addEventListener('resize', resizeCanvasAndCells);
+
+        // --- 手動更新確認ボタンのロジック ---
+        if (manualCheckUpdateButton) {
+            manualCheckUpdateButton.addEventListener('click', () => {
+                console.log('[PWA Update] Manual "Check for Updates" button clicked.');
+                messageArea.textContent = ""; // Clear previous messages
+
+                if (!navigator.serviceWorker || !navigator.serviceWorker.getRegistration) {
+                    console.warn('[PWA Update] Service Worker API not available.');
+                    messageArea.textContent = "Service Workerが利用できません。";
+                    return;
+                }
+
+                navigator.serviceWorker.getRegistration().then(registration => {
+                    if (!registration) {
+                        console.log('[PWA Update] Manual check: No active Service Worker registration found.');
+                        messageArea.textContent = "更新チェック機能が有効ではありません。";
+                        return;
+                    }
+
+                    // 1. 既に待機中のSWがいるか確認
+                    if (registration.waiting) {
+                        newWorker = registration.waiting; // newWorker を更新
+                        console.log('[PWA Update] Manual check: An update is already waiting. Showing notification.');
+                        messageArea.textContent = "新しいバージョンが待機中です！";
+                        showUpdateNotification(); 
+                        return;
+                    }
+
+                    // 2. サーバーに新しいバージョンがないか確認
+                    console.log('[PWA Update] Manual check: Calling registration.update().');
+                    messageArea.textContent = "更新を確認中...";
+                    registration.update()
+                        .then(updatedReg => { // updatedReg は registration と同じオブジェクト
+                            // registration.update()が解決した後、再度waitingとinstallingを確認
+                            if (updatedReg.installing) {
+                                console.log('[PWA Update] Manual check: Update found by reg.update(), now installing.');
+                                messageArea.textContent = "新しいバージョンをインストール中...";
+                                // 'updatefound' イベントリスナーがこれを処理するはずだが、念のためtrackInstallingを呼ぶ
+                                if (!newWorker || newWorker !== updatedReg.installing) { // newWorkerが未設定か、別のinstallingワーカーの場合
+                                   newWorker = updatedReg.installing;
+                                   trackInstalling(newWorker);
+                                }
+                            } else if (updatedReg.waiting) {
+                                newWorker = updatedReg.waiting; // newWorker を更新
+                                console.log('[PWA Update] Manual check: Update found by reg.update(), now waiting.');
+                                messageArea.textContent = "新しいバージョンが見つかりました！";
+                                showUpdateNotification();
+                            } else {
+                                console.log('[PWA Update] Manual check: reg.update() completed. No new version found or already up to date.');
+                                messageArea.textContent = "現在、最新バージョンです。";
+                            }
+                        })
+                        .catch(err => {
+                            console.error('[PWA Update] Manual check: registration.update() failed:', err);
+                            messageArea.textContent = "更新チェックに失敗しました。";
+                        });
+                }).catch(err => {
+                    console.error('[PWA Update] Manual check: getRegistration() failed:', err);
+                    messageArea.textContent = "更新機能の状態取得に失敗しました。";
+                });
+            });
+        }
 
         // --- ゲーム初期化 ---
         initGame();
@@ -860,46 +935,40 @@
         // --- Service Worker 登録と更新処理 ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // Service Workerの登録パスが正しいことを確認
-                // 通常、PWAのルートからの相対パス、または絶対パスを使用します。
-                // './sw.js' は、index.html と sw.js が同じディレクトリにあることを前提としています。
                 navigator.serviceWorker.register('./sw.js', { scope: './' })
                     .then(registration => {
                         console.log('[PWA Update] Service Worker registered successfully with scope:', registration.scope);
 
                         if (registration.waiting) {
                             newWorker = registration.waiting;
-                            console.log('[PWA Update] A new service worker is already waiting to activate.', newWorker);
+                            console.log('[PWA Update] Initial check: A new SW is already waiting.', newWorker);
                             showUpdateNotification();
                         }
 
                         if (registration.installing) {
-                            newWorker = registration.installing;
-                            console.log('[PWA Update] A new service worker is installing upon registration.', newWorker);
-                            trackInstalling(newWorker);
+                            // newWorker = registration.installing; // trackInstalling内で設定されることもある
+                            console.log('[PWA Update] Initial check: A new SW is installing.', registration.installing);
+                            trackInstalling(registration.installing);
                         }
 
                         registration.addEventListener('updatefound', () => {
-                            newWorker = registration.installing;
-                            console.log('[PWA Update] Event "updatefound": New service worker found and is installing.', newWorker);
-                            trackInstalling(newWorker);
+                            const installingWorker = registration.installing;
+                            console.log('[PWA Update] Event "updatefound": New SW found and is installing.', installingWorker);
+                            // newWorker = installingWorker; // trackInstalling内で設定されることもある
+                            trackInstalling(installingWorker);
                         });
                     })
                     .catch(error => {
-                        // エラーログを詳細に出力
                         console.error('[PWA Update] Service Worker registration failed:', error);
-                        console.error('Error name:', error.name);
-                        console.error('Error message:', error.message);
-                        console.error('Error stack:', error.stack);
                     });
 
-                let refreshingReload;
+                let refreshingReloadFlag; // リロード処理中のフラグ名変更
                 navigator.serviceWorker.addEventListener('controllerchange', () => {
-                    console.log('[PWA Update] Event "controllerchange": New service worker has activated.');
-                    if (refreshingReload) return;
+                    console.log('[PWA Update] Event "controllerchange": New SW has activated.');
+                    if (refreshingReloadFlag) return;
                     console.log('[PWA Update] Reloading page to apply updates.');
                     window.location.reload();
-                    refreshingReload = true;
+                    refreshingReloadFlag = true;
                 });
 
                 document.addEventListener('visibilitychange', () => {
@@ -907,18 +976,22 @@
                         console.log('[PWA Update] App became visible, attempting to check for SW update via registration.update().');
                         navigator.serviceWorker.getRegistration().then(reg => {
                             if (reg) {
-                                reg.update().then(updatedReg => {
-                                    if (updatedReg && updatedReg.installing) {
-                                         console.log('[PWA Update] Update check found an installing worker.');
-                                    } else if (updatedReg && updatedReg.waiting) {
-                                         console.log('[PWA Update] Update check found a waiting worker. Showing notification.');
+                                reg.update().then(updatedReg => { // updatedReg は reg と同じオブジェクト
+                                    if (updatedReg.installing) {
+                                         console.log('[PWA Update] Visibility check: Update found, now installing.');
+                                         if (!newWorker || newWorker !== updatedReg.installing) {
+                                            newWorker = updatedReg.installing;
+                                            trackInstalling(newWorker);
+                                         }
+                                    } else if (updatedReg.waiting) {
+                                         console.log('[PWA Update] Visibility check: Update found, now waiting. Showing notification.');
                                          newWorker = updatedReg.waiting;
                                          showUpdateNotification();
                                     } else {
-                                         console.log('[PWA Update] Update check found no new version.');
+                                         console.log('[PWA Update] Visibility check: No new version found.');
                                     }
                                 }).catch(err => {
-                                    console.warn('[PWA Update] registration.update() failed:', err);
+                                    console.warn('[PWA Update] Visibility check: registration.update() failed:', err);
                                 });
                             }
                         });
