@@ -195,12 +195,59 @@
             background-color: #3182ce; /* Tailwind blue-600 */
         }
 
-        #version-display { /* Added style for version display */
+        #version-display {
             position: absolute;
             bottom: 5px;
             left: 10px;
             font-size: 0.75rem;
             color: #a0aec0; /* Tailwind gray-500 */
+        }
+
+        /* Update notification styles */
+        #update-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #38a169; /* Tailwind green-600 */
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+            text-align: center;
+        }
+
+        #update-notification.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        #update-button {
+            background-color: #2d3748;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            margin-left: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        #update-button:hover {
+            background-color: #1a202c;
         }
 
         @media (max-width: 360px) {
@@ -218,14 +265,26 @@
                 width: 8px; /* Adjusted for smaller screens */
                 height: 8px;
             }
-            #version-display { /* Adjust version display for smaller screens */
+            #version-display {
                 font-size: 0.65rem;
                 left: 5px;
+            }
+            #update-notification {
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                transform: none;
+                font-size: 0.8rem;
             }
         }
     </style>
 </head>
 <body>
+    <div id="update-notification">
+        新しいバージョンが利用可能です！
+        <button id="update-button">更新</button>
+    </div>
+
     <div id="game-container">
         <div id="mission-display">ミッションを読み込み中...</div>
         <div id="score-display">スコア: <span id="score">0</span></div>
@@ -237,7 +296,8 @@
         <div id="controls-area">
             <button id="give-up-button" class="action-button">ギブアップ</button>
         </div>
-        <div id="version-display">ver 0.8</div> </div>
+        <div id="version-display">ver 0.9</div>
+    </div>
 
     <script>
         const GRID_SIZE = 4;
@@ -256,7 +316,8 @@
         const messageArea = document.getElementById('message-area');
         const giveUpButton = document.getElementById('give-up-button');
         const gridArea = document.getElementById('grid-area');
-        // const versionDisplay = document.getElementById('version-display'); // No need to get it if static
+        const updateNotification = document.getElementById('update-notification');
+        const updateButton = document.getElementById('update-button');
 
         let cellsData = [];
         let selectedCells = [];
@@ -265,6 +326,9 @@
         let isDrawing = false;
         let missionsSinceLastLevelUp = 0;
         let currentLevel = 1;
+
+        // Service Worker variables
+        let newWorker = null;
 
         // Initialize the game
         function initGame() {
@@ -857,6 +921,23 @@
             scoreDisplay.textContent = score;
         }
 
+        // Show update notification
+        function showUpdateNotification() {
+            updateNotification.classList.add('show');
+        }
+
+        // Hide update notification
+        function hideUpdateNotification() {
+            updateNotification.classList.remove('show');
+        }
+
+        // Handle update button click
+        function handleUpdate() {
+            if (newWorker) {
+                newWorker.postMessage({ action: 'skipWaiting' });
+            }
+        }
+
         // --- Event Listeners ---
         const eventAreaForInteraction = document.getElementById('grid-area'); // Use grid-area for more reliable touch boundaries
 
@@ -871,15 +952,46 @@
         document.addEventListener('touchend', handleInteractionEnd);
         document.addEventListener('touchcancel', handleInteractionEnd); // Handle cancelled touches
 
+        // Update button event
+        updateButton.addEventListener('click', handleUpdate);
+
         // --- Initialize Game ---
         initGame();
 
-        // --- Service Worker Registration (Optional PWA feature) ---
+        // --- Service Worker Registration with Update Detection ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js') // Assuming sw.js is in the same directory
+                navigator.serviceWorker.register('./sw.js')
                     .then(registration => {
                         console.log('Service Worker registered: ', registration);
+
+                        // Listen for updates
+                        registration.addEventListener('updatefound', () => {
+                            const newSW = registration.installing;
+                            if (newSW) {
+                                newWorker = newSW;
+                                newSW.addEventListener('statechange', () => {
+                                    if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+                                        // New version available
+                                        showUpdateNotification();
+                                    }
+                                });
+                            }
+                        });
+
+                        // Listen for service worker messages
+                        navigator.serviceWorker.addEventListener('message', (event) => {
+                            if (event.data && event.data.type === 'CACHE_UPDATED') {
+                                // Reload the page to get the new version
+                                window.location.reload();
+                            }
+                        });
+
+                        // Check if there's a waiting service worker
+                        if (registration.waiting) {
+                            newWorker = registration.waiting;
+                            showUpdateNotification();
+                        }
                     })
                     .catch(error => {
                         console.log('Service Worker registration failed: ', error);
