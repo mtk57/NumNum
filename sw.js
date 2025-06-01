@@ -1,7 +1,7 @@
 // sw.js
 
 // キャッシュ名（バージョンを更新すると古いキャッシュと区別できる）
-const CACHE_NAME = 'simple-number-connect-cache-v09'; // バージョンを0.9に更新
+const CACHE_NAME = 'simple-number-connect-cache-v10';  // ver1.0
 
 // キャッシュするファイルのリスト
 const urlsToCache = [
