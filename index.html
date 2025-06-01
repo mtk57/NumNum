@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Simple Number Connect (ver 0.1)</title>
+    <title>Simple Number Connect (ver 0.5)</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -35,15 +35,15 @@
             box-sizing: border-box;
         }
         #mission-display {
-            font-size: 1.1rem; 
+            font-size: 1.1rem;
             font-weight: bold;
             margin-bottom: 12px;
             text-align: center;
             color: #90cdf4; /* Tailwind blue-400 */
-            min-height: 3em; 
+            min-height: 3em;
         }
         #score-display {
-            font-size: 1rem; 
+            font-size: 1rem;
             margin-bottom: 12px;
         }
         #grid-area {
@@ -52,6 +52,7 @@
             max-width: 320px; /* Max size for the grid itself */
             aspect-ratio: 1 / 1; /* Make it square */
             margin-bottom: 15px;
+            overflow: hidden; /* Prevent particles from showing outside */
         }
         #grid-container {
             display: grid;
@@ -60,42 +61,57 @@
             gap: 8px;
             width: 100%;
             height: 100%;
-            position: relative; 
+            position: relative;
             z-index: 1;
             user-select: none;
-            -webkit-user-select: none; 
-            -ms-user-select: none; 
+            -webkit-user-select: none;
+            -ms-user-select: none;
         }
         .cell {
             background-color: #4a5568; /* Tailwind gray-600 */
-            border-radius: 50%; 
+            border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.75rem; 
+            font-size: 1.75rem;
             font-weight: bold;
             color: #edf2f7; /* Tailwind gray-200 */
             cursor: pointer;
             transition: transform 0.2s ease, background-color 0.2s ease, opacity 0.3s ease;
-            position: relative; 
-            aspect-ratio: 1 / 1; 
+            position: relative;
+            aspect-ratio: 1 / 1;
         }
         .cell.selected {
             background-color: #63b3ed; /* Tailwind blue-400 */
-            transform: scale(1.1);
+            transform: scale(1.15); /* Slightly larger selection indication */
             color: #1a202c;
+            box-shadow: 0 0 15px #63b3ed, 0 0 25px #63b3ed; /* Glow effect */
         }
         .cell.clearing {
-            opacity: 0;
-            transform: scale(0.5) rotate(360deg);
-            transition: opacity 0.4s ease, transform 0.4s ease;
+            animation: cellClearEffect 0.6s forwards ease-out;
+        }
+        @keyframes cellClearEffect {
+            0% {
+                opacity: 1;
+                transform: scale(1.1) rotate(0deg);
+                background-color: #fbd38d;
+            }
+            50% {
+                transform: scale(1.3) rotate(180deg);
+                opacity: 0.7;
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.3) rotate(360deg);
+                background-color: #fbd38d;
+            }
         }
         .cell.falling {
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .cell.new-cell {
             opacity: 0;
-            transform: translateY(-30px) scale(0.5); /* Start slightly higher */
+            transform: translateY(-30px) scale(0.5);
             animation: newCellAppear 0.5s forwards cubic-bezier(0.4, 0, 0.2, 1);
         }
         @keyframes newCellAppear {
@@ -108,8 +124,8 @@
             position: absolute;
             border: 1px dashed rgba(255, 0, 0, 0.5);
             border-radius: 50%;
-            pointer-events: none; 
-            z-index: 3; 
+            pointer-events: none;
+            z-index: 3;
             box-sizing: border-box;
         }
         #line-canvas {
@@ -118,9 +134,41 @@
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none; 
+            pointer-events: none;
             z-index: 2;
         }
+
+        /* Particle styles */
+        .particle {
+            position: absolute;
+            width: 12px; /* Increased size */
+            height: 12px; /* Increased size */
+            background-color: #fbd38d; /* Tailwind orange-300 */
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 4; /* Above cells and lines */
+            opacity: 1;
+            animation: particle-effect 0.8s forwards ease-out; /* Slightly longer animation */
+        }
+
+        @keyframes particle-effect {
+            0% {
+                transform: translate(0, 0) scale(1) rotate(0deg);
+                opacity: 1;
+                background-color: #fee2b3; /* Lighter orange */
+            }
+            50% {
+                transform: translate(var(--particle-mid-x), var(--particle-mid-y)) scale(1.5) rotate(180deg);
+                opacity: 0.8;
+                background-color: #f6ad55; /* Darker orange */
+            }
+            100% {
+                transform: translate(var(--particle-x), var(--particle-y)) scale(0) rotate(360deg);
+                opacity: 0;
+                background-color: #fbd38d;
+            }
+        }
+
         #message-area {
             min-height: 1.5em;
             margin-top: 10px;
@@ -129,16 +177,16 @@
         }
         #controls-area {
             display: flex;
-            gap: 10px; 
+            gap: 10px;
             margin-top: 10px;
         }
         .action-button {
             background-color: #4299e1; /* Tailwind blue-500 */
             color: white;
-            padding: 10px 15px; 
+            padding: 10px 15px;
             border: none;
             border-radius: 8px;
-            font-size: 0.9rem; 
+            font-size: 0.9rem;
             cursor: pointer;
             transition: background-color 0.2s;
         }
@@ -146,16 +194,20 @@
             background-color: #3182ce; /* Tailwind blue-600 */
         }
 
-        @media (max-width: 360px) { /* Responsive adjustments for smaller screens */
+        @media (max-width: 360px) {
             .cell {
-                font-size: 1.25rem; 
+                font-size: 1.25rem;
             }
             #mission-display {
-                font-size: 0.9rem; 
+                font-size: 0.9rem;
             }
              .action-button {
                 padding: 8px 12px;
                 font-size: 0.8rem;
+            }
+            .particle {
+                width: 8px; /* Adjusted for smaller screens */
+                height: 8px;
             }
         }
     </style>
@@ -175,11 +227,13 @@
     </div>
 
     <script>
-        const GRID_SIZE = 4; 
+        const GRID_SIZE = 4;
         const MIN_NUM = 1;
         const MAX_NUM = 9;
         const TARGET_MISSIONS_PER_LEVEL = 10;
-        const DEBUG_SHOW_COLLISION_CIRCLES = false; 
+        const DEBUG_SHOW_COLLISION_CIRCLES = false;
+        const NUM_PARTICLES_PER_CELL = 12; // Increased number of particles
+        const PARTICLE_BASE_SIZE_PX = 12; // Base particle size from CSS (default, not responsive yet)
 
         const gridContainer = document.getElementById('grid-container');
         const lineCanvas = document.getElementById('line-canvas');
@@ -190,72 +244,73 @@
         const giveUpButton = document.getElementById('give-up-button');
         const gridArea = document.getElementById('grid-area');
 
-        let cellsData = []; 
-        let selectedCells = []; 
-        let currentMission = { type: 'sum', target: 0, text: "" }; // Initialize with sum type
+        let cellsData = [];
+        let selectedCells = [];
+        let currentMission = { type: 'sum', target: 0, text: "" };
         let score = 0;
         let isDrawing = false;
         let missionsSinceLastLevelUp = 0;
         let currentLevel = 1;
 
         function initGame() {
-            gridContainer.innerHTML = ''; 
+            gridContainer.innerHTML = '';
             cellsData = [];
             document.querySelectorAll('.debug-collision-circle').forEach(el => el.remove());
+            document.querySelectorAll('.particle').forEach(el => el.remove());
 
             missionsSinceLastLevelUp = 0;
             currentLevel = 1;
-            score = 0; 
-            currentMission.target = 0; // Reset mission target for new game, forces new target generation
+            score = 0;
+            currentMission.target = 0;
 
             for (let r = 0; r < GRID_SIZE; r++) {
                 const rowData = [];
                 for (let c = 0; c < GRID_SIZE; c++) {
                     const cellValue = Math.floor(Math.random() * (MAX_NUM - MIN_NUM + 1)) + MIN_NUM;
                     const cellElement = createCellElement(r, c, cellValue);
-                    
-                    const cellObj = { 
+
+                    const cellObj = {
                         value: cellValue,
-                        element: cellElement, 
-                        row: r, 
-                        col: c, 
-                        id: `cell-${r}-${c}-${Date.now()}`, 
-                        centerX: 0, 
-                        centerY: 0, 
-                        collisionRadius: 0 
+                        element: cellElement,
+                        row: r,
+                        col: c,
+                        id: `cell-${r}-${c}-${Date.now()}`,
+                        centerX: 0,
+                        centerY: 0,
+                        collisionRadius: 0
                     };
                     gridContainer.appendChild(cellElement);
                     rowData.push(cellObj);
                 }
                 cellsData.push(rowData);
             }
-            resizeCanvasAndCells(); 
-            updateAllCellDisplays(); 
-            generateNewMission(); 
+            resizeCanvasAndCells();
+            updateAllCellDisplays();
+            generateNewMission();
             updateScoreDisplay();
-            clearSelection(); 
-            window.addEventListener('resize', resizeCanvasAndCells); 
+            clearSelection();
+            window.addEventListener('resize', resizeCanvasAndCells);
         }
 
         function createCellElement(row, col, value) {
             const cell = document.createElement('div');
             cell.classList.add('cell');
-            cell.dataset.row = row; 
+            cell.dataset.row = row;
             cell.dataset.col = col;
             return cell;
         }
-        
+
         function updateAllCellDisplays() {
             for (let r = 0; r < GRID_SIZE; r++) {
                 for (let c = 0; c < GRID_SIZE; c++) {
                     const cellObj = cellsData[r][c];
-                    if (cellObj && cellObj.element) { 
+                    if (cellObj && cellObj.element) {
                          cellObj.element.textContent = cellObj.value === null ? '' : cellObj.value.toString();
                     }
                 }
             }
         }
-        
+
         function resizeCanvasAndCells() {
             const gridRect = gridContainer.getBoundingClientRect();
             lineCanvas.width = gridRect.width;
@@ -263,18 +318,18 @@
 
             document.querySelectorAll('.debug-collision-circle').forEach(el => el.remove());
 
-            if (!cellsData || cellsData.length === 0) return; 
+            if (!cellsData || cellsData.length === 0) return;
 
             for (let r = 0; r < GRID_SIZE; r++) {
                 for (let c = 0; c < GRID_SIZE; c++) {
                     const cellObj = cellsData[r][c];
-                    if (!cellObj || !cellObj.element) continue; 
+                    if (!cellObj || !cellObj.element) continue;
 
                     const cellRect = cellObj.element.getBoundingClientRect();
-                    
+
                     cellObj.centerX = (cellRect.left - gridRect.left) + (cellRect.width / 2);
                     cellObj.centerY = (cellRect.top - gridRect.top) + (cellRect.height / 2);
-                    cellObj.collisionRadius = cellRect.width * 0.40; 
+                    cellObj.collisionRadius = cellRect.width * 0.40;
 
                     if (DEBUG_SHOW_COLLISION_CIRCLES) {
                         const debugCircle = document.createElement('div');
@@ -287,7 +342,7 @@
                     }
                 }
             }
-            drawLines(); 
+            drawLines();
         }
 
         function updateMissionDisplay() {
@@ -301,29 +356,27 @@
         function generateNewMission() {
             let targetValue;
             let missionText = "";
-            
-            // Generate a new target sum if it's the start of a new level (missionsSinceLastLevelUp is 0)
-            // or if the currentMission.target is 0 (e.g., game start or after give up that resets target).
+
             if (missionsSinceLastLevelUp === 0 || currentMission.target === 0) {
                 let potentialSolutionCells = [];
                 let availableCells = cellsData.flat().filter(c => c && c.value !== null);
 
-                if (availableCells.length < 2) { 
-                    missionText = "数字が足りません！"; 
-                    currentMission = { type: 'sum', target: 0, text: missionText }; 
+                if (availableCells.length < 2) {
+                    missionText = "数字が足りません！";
+                    currentMission = { type: 'sum', target: 0, text: missionText };
                     updateMissionDisplay();
                     return;
                 }
 
-                let numToPick = Math.floor(Math.random() * 2) + 2; 
+                let numToPick = Math.floor(Math.random() * 2) + 2;
                 numToPick = Math.min(numToPick, availableCells.length);
-                
+
                 for(let i=0; i<numToPick; i++) {
                      if(availableCells.length === 0) break;
                     potentialSolutionCells.push(availableCells.splice(Math.floor(Math.random() * availableCells.length), 1)[0]);
                 }
 
-                if (potentialSolutionCells.length < 2 && cellsData.flat().filter(c => c && c.value !== null).length >=2) { 
+                if (potentialSolutionCells.length < 2 && cellsData.flat().filter(c => c && c.value !== null).length >=2) {
                      potentialSolutionCells = cellsData.flat().filter(c => c && c.value !== null).slice(0,2);
                 } else if (potentialSolutionCells.length < 2) {
                      missionText = "ミッション作成不可";
@@ -333,11 +386,11 @@
                 }
 
                 targetValue = potentialSolutionCells.reduce((acc, cell) => acc + cell.value, 0);
-                if (targetValue > 50 && potentialSolutionCells.length > 2) targetValue = Math.floor(Math.random() * 30) + 10; 
+                if (targetValue > 50 && potentialSolutionCells.length > 2) targetValue = Math.floor(Math.random() * 30) + 10;
                 else if (targetValue > 30 && potentialSolutionCells.length === 2) targetValue = Math.floor(Math.random() * 20) + 5;
-                else if (targetValue < 5) targetValue = Math.floor(Math.random() * 5) + 5; 
+                else if (targetValue < 5) targetValue = Math.floor(Math.random() * 5) + 5;
 
-                currentMission.target = targetValue; 
+                currentMission.target = targetValue;
             }
             currentMission.type = 'sum';
             missionText = `合計して ${currentMission.target} にしよう！`;
@@ -346,17 +399,17 @@
         }
 
         function checkMission() {
-            if (selectedCells.length < 2) return false; 
+            if (selectedCells.length < 2) return false;
 
             const values = selectedCells.map(cell => cell.value);
             const result = values.reduce((acc, val) => acc + val, 0);
-            
+
             return result === currentMission.target;
         }
 
         function handleInteractionStart(event) {
             if (gridContainer.contains(event.target) || event.target === gridContainer) {
-                 event.preventDefault(); 
+                 event.preventDefault();
             }
             clearSelection();
             isDrawing = true;
@@ -365,15 +418,15 @@
 
         function handleInteractionMove(event) {
             if (!isDrawing) return;
-             if (gridContainer.contains(event.target) || event.target === gridContainer || event.type === 'touchmove') { 
-                event.preventDefault(); 
+             if (gridContainer.contains(event.target) || event.target === gridContainer || event.type === 'touchmove') {
+                event.preventDefault();
             }
             addCellToSelection(event);
         }
 
         function handleInteractionEnd(event) {
             if (!isDrawing && selectedCells.length === 0) {
-                clearSelection(); 
+                clearSelection();
                 return;
             }
             if (isDrawing) {
@@ -384,74 +437,75 @@
 
             if (checkMission()) {
                 messageArea.textContent = "ミッション成功！";
-                score += selectedCells.length * 10; 
+                score += selectedCells.length * 10;
                 updateScoreDisplay();
-                
+                drawLines();
+
                 missionsSinceLastLevelUp++;
                 if (missionsSinceLastLevelUp >= TARGET_MISSIONS_PER_LEVEL) {
                     currentLevel++;
-                    missionsSinceLastLevelUp = 0; 
-                    currentMission.target = 0; // Force new target generation for the new level
+                    missionsSinceLastLevelUp = 0;
+                    currentMission.target = 0;
                     messageArea.textContent = `レベル ${currentLevel -1} クリア！レベル ${currentLevel} スタート！`;
                 }
-                processClearedCells(); 
+                processClearedCells();
             } else {
-                if (selectedCells.length > 0) { 
+                if (selectedCells.length > 0) {
                     messageArea.textContent = "残念！もう一度挑戦。";
                     setTimeout(() => {
-                        clearSelection(); 
+                        clearSelection();
                         if (messageArea.textContent === "残念！もう一度挑戦。") {
                              messageArea.textContent = "";
                         }
-                    }, 1000); 
+                    }, 1000);
                 } else {
                     clearSelection();
                 }
             }
-            
+
             const levelUpMessage = `レベル ${currentLevel -1} クリア！レベル ${currentLevel} スタート！`;
-            if (messageArea.textContent !== levelUpMessage && messageArea.textContent !== "残念！もう一度挑戦。") { 
-                setTimeout(() => { 
-                    if (messageArea.textContent !== levelUpMessage && messageArea.textContent !== "残念！もう一度挑戦。") { 
-                        messageArea.textContent = ""; 
+            if (messageArea.textContent !== levelUpMessage && messageArea.textContent !== "残念！もう一度挑戦。") {
+                setTimeout(() => {
+                    if (messageArea.textContent !== levelUpMessage && messageArea.textContent !== "残念！もう一度挑戦。") {
+                        messageArea.textContent = "";
                     }
-                }, 2000); 
+                }, 2000);
             }
         }
-        
+
         function handleGiveUp() {
             clearSelection();
-            currentLevel++; // MODIFIED: Advance to the next level
-            missionsSinceLastLevelUp = 0; // MODIFIED: Reset mission count for the new level
-            currentMission.target = 0; // MODIFIED: Force new target generation for the new level
-            
-            generateNewMission(); 
+            currentLevel++;
+            missionsSinceLastLevelUp = 0;
+            currentMission.target = 0;
+
+            generateNewMission();
             messageArea.textContent = `次のレベル (${currentLevel}) に進みます！`;
-            setTimeout(() => { 
+            setTimeout(() => {
                 if (messageArea.textContent === `次のレベル (${currentLevel}) に進みます！`) {
-                    messageArea.textContent = ""; 
+                    messageArea.textContent = "";
                 }
             }, 2000);
         }
         giveUpButton.addEventListener('click', handleGiveUp);
-        
+
         function addCellToSelection(event) {
-            const targetCellData = getCellFromEvent(event); 
-            if (!targetCellData) return; 
+            const targetCellData = getCellFromEvent(event);
+            if (!targetCellData) return;
 
             if (selectedCells.length > 0) {
                 const lastCell = selectedCells[selectedCells.length - 1];
-                if (lastCell.id === targetCellData.id) return; 
+                if (lastCell.id === targetCellData.id) return;
             }
-            
+
             const alreadySelectedInPath = selectedCells.find(sc => sc.id === targetCellData.id);
-            if (alreadySelectedInPath) return; 
+            if (alreadySelectedInPath) return;
 
             selectedCells.push(targetCellData);
             if(targetCellData.element) targetCellData.element.classList.add('selected');
             drawLines();
         }
-        
+
         function getCellFromEvent(event) {
             const gridRect = gridContainer.getBoundingClientRect();
             let clientX, clientY;
@@ -459,7 +513,7 @@
             if (event.touches && event.touches.length > 0) {
                 clientX = event.touches[0].clientX;
                 clientY = event.touches[0].clientY;
-            } else if (event.changedTouches && event.changedTouches.length > 0) { 
+            } else if (event.changedTouches && event.changedTouches.length > 0) {
                 clientX = event.changedTouches[0].clientX;
                 clientY = event.changedTouches[0].clientY;
             } else {
@@ -473,16 +527,16 @@
             for (let r = 0; r < GRID_SIZE; r++) {
                 for (let c = 0; c < GRID_SIZE; c++) {
                     const cell = cellsData[r][c];
-                    if (!cell) continue; 
+                    if (!cell) continue;
                     const distance = Math.sqrt(
                         Math.pow(pointerX - cell.centerX, 2) + Math.pow(pointerY - cell.centerY, 2)
                     );
                     if (distance < cell.collisionRadius) {
-                        return cell; 
+                        return cell;
                     }
                 }
             }
-            return null; 
+            return null;
         }
 
         function clearSelection() {
@@ -492,14 +546,14 @@
             selectedCells = [];
             clearCanvas();
         }
-        
+
         function drawLines() {
             clearCanvas();
             if (selectedCells.length < 2) return;
 
             canvasCtx.beginPath();
-            canvasCtx.strokeStyle = '#f0e68c'; 
-            canvasCtx.lineWidth = Math.max(2, gridContainer.offsetWidth / 75); 
+            canvasCtx.strokeStyle = '#63b3ed';
+            canvasCtx.lineWidth = Math.max(3, gridContainer.offsetWidth / 70);
             canvasCtx.lineCap = 'round';
             canvasCtx.lineJoin = 'round';
 
@@ -521,14 +575,60 @@
             canvasCtx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
         }
 
+        function createParticles(cell) {
+            if (!cell || !gridArea) return;
+
+            const startX = cell.centerX;
+            const startY = cell.centerY;
+
+            for (let i = 0; i < NUM_PARTICLES_PER_CELL; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+
+                // Use defined base size for particle positioning
+                // Note: If CSS @media query changes particle size, this JS const needs to be aware or CSS needs to handle centering.
+                // For now, using the base size.
+                const particleSize = PARTICLE_BASE_SIZE_PX;
+                particle.style.left = `${startX - particleSize / 2}px`;
+                particle.style.top = `${startY - particleSize / 2}px`;
+
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 60 + 30; 
+                const midDistance = distance * 0.5; 
+
+                const endX = Math.cos(angle) * distance;
+                const endY = Math.sin(angle) * distance;
+                const midX = Math.cos(angle) * midDistance;
+                const midY = Math.sin(angle) * midDistance;
+
+                particle.style.setProperty('--particle-x', `${endX}px`);
+                particle.style.setProperty('--particle-y', `${endY}px`);
+                particle.style.setProperty('--particle-mid-x', `${midX}px`);
+                particle.style.setProperty('--particle-mid-y', `${midY}px`);
+                particle.style.animationDelay = `${Math.random() * 0.25}s`; 
+
+                gridArea.appendChild(particle);
+
+                particle.addEventListener('animationend', () => {
+                    if (particle.parentNode) {
+                        particle.parentNode.removeChild(particle);
+                    }
+                });
+            }
+        }
+
+
         async function processClearedCells() {
-            const cellsToClear = [...selectedCells]; 
-            clearSelection(); 
+            const cellsToClear = [...selectedCells];
+            cellsToClear.forEach(cell => createParticles(cell));
+
+            const tempSelectedForLine = [...selectedCells];
+            selectedCells = [];
 
             const removalPromises = cellsToClear.map(cell => {
                 if(cell && cell.element) {
                     cell.element.classList.add('clearing');
-                    return new Promise(resolve => setTimeout(resolve, 400)); 
+                    return new Promise(resolve => setTimeout(resolve, 600));
                 }
                 return Promise.resolve();
             });
@@ -537,15 +637,23 @@
             cellsToClear.forEach(clearedCell => {
                 if (clearedCell && typeof clearedCell.row === 'number' && typeof clearedCell.col === 'number' &&
                     cellsData[clearedCell.row] && cellsData[clearedCell.row][clearedCell.col]) {
-                    cellsData[clearedCell.row][clearedCell.col].value = null; 
+                    cellsData[clearedCell.row][clearedCell.col].value = null;
                     if(clearedCell.element) {
                         clearedCell.element.classList.remove('clearing');
                     }
                 }
             });
 
-            await applyGravityAndRefill(); 
-            generateNewMission(); 
+             tempSelectedForLine.forEach(cell => {
+                 if (cell && cell.element) cell.element.classList.remove('selected');
+            });
+            setTimeout(() => {
+                 if(selectedCells.length === 0) clearCanvas();
+            }, 100);
+
+
+            await applyGravityAndRefill();
+            generateNewMission();
         }
 
         async function applyGravityAndRefill() {
@@ -553,93 +661,100 @@
             for (let c = 0; c < GRID_SIZE; c++) {
                 let emptySlotsInCol = 0;
                 for (let r = GRID_SIZE - 1; r >= 0; r--) {
-                    if (!cellsData[r] || !cellsData[r][c]) continue; 
+                    if (!cellsData[r] || !cellsData[r][c]) continue;
                     const currentCellData = cellsData[r][c];
 
                     if (currentCellData.value === null) {
                         emptySlotsInCol++;
                     } else if (emptySlotsInCol > 0) {
                         const newRow = r + emptySlotsInCol;
-                        const cellToMove = cellsData[r][c]; 
-                        
-                        if (!cellToMove.element) continue; 
+                        const cellToMove = cellsData[r][c];
+
+                        if (!cellToMove.element) continue;
 
                         const cellHeight = cellToMove.element.offsetHeight;
-                        const gap = parseFloat(window.getComputedStyle(gridContainer).gap) || 8; 
+                        const gap = parseFloat(window.getComputedStyle(gridContainer).gap) || 8;
                         const fallDistance = emptySlotsInCol * (cellHeight + gap);
-                        
+
                         cellToMove.element.style.transform = `translateY(${fallDistance}px)`;
                         cellToMove.element.classList.add('falling');
-                        
-                        cellsData[newRow][c] = cellToMove; 
-                        cellsData[r][c] = { 
-                            value: null, 
-                            element: cellsData[r][c].element, 
+
+                        cellsData[newRow][c] = cellToMove;
+                        cellsData[r][c] = {
+                            value: null,
+                            element: cellsData[r][c].element,
                             row: r, col: c, id: `empty-temp-${r}-${c}-${Date.now()}`,
                             centerX: cellsData[r][c].centerX, centerY: cellsData[r][c].centerY, collisionRadius: cellsData[r][c].collisionRadius
                         };
-                        cellToMove.row = newRow; 
-                        
+                        cellToMove.row = newRow;
+
                         animationPromises.push(new Promise(resolve => {
                             setTimeout(() => {
-                                if (cellToMove.element) { 
+                                if (cellToMove.element) {
                                     cellToMove.element.style.transform = '';
                                     cellToMove.element.classList.remove('falling');
                                 }
                                 resolve();
-                            }, 500); 
+                            }, 500);
                         }));
                     }
                 }
 
                 for (let i = 0; i < emptySlotsInCol; i++) {
-                    const newRowForNewCell = i; 
+                    const newRowForNewCell = i;
                     const newValue = Math.floor(Math.random() * (MAX_NUM - MIN_NUM + 1)) + MIN_NUM;
-                    const cellToFill = cellsData[newRowForNewCell][c]; 
-                    if (!cellToFill || !cellToFill.element) continue; 
+                    const cellToFill = cellsData[newRowForNewCell][c];
+                    if (!cellToFill || !cellToFill.element) continue;
 
-                    cellToFill.value = newValue; 
-                    cellToFill.element.classList.add('new-cell'); 
-                    
+                    cellToFill.value = newValue;
+                    cellToFill.element.classList.add('new-cell');
+
                     animationPromises.push(new Promise(resolve => {
                         setTimeout(() => {
-                            if (cellToFill.element) { 
+                            if (cellToFill.element) {
                                 cellToFill.element.classList.remove('new-cell');
                             }
                             resolve();
-                        }, 500); 
+                        }, 500);
                     }));
                 }
             }
-            
+
             await Promise.all(animationPromises);
 
-            const tempGridDataValuesOnly = cellsData.map(row => 
-                row.map(cell => ({ value: cell.value })) 
+            const tempGridDataValuesOnly = cellsData.map(row =>
+                row.map(cell => ({ value: cell.value }))
             );
 
-            gridContainer.innerHTML = ''; 
-            const newMasterCellsData = []; 
+            gridContainer.innerHTML = '';
+            const newMasterCellsData = [];
 
             for(let r=0; r<GRID_SIZE; r++) {
                 const newRowData = [];
                 for(let c=0; c<GRID_SIZE; c++) {
-                    const valueToSet = tempGridDataValuesOnly[r][c].value; 
-                    const newElement = createCellElement(r,c, valueToSet); 
-                    gridContainer.appendChild(newElement); 
+                    const valueToSet = tempGridDataValuesOnly[r][c].value;
+                    const newElement = createCellElement(r,c, valueToSet);
+                    gridContainer.appendChild(newElement);
+
+                    const originalCellData = cellsData[r][c];
+                    if(originalCellData && originalCellData.element && originalCellData.element.classList.contains('new-cell')){
+                        newElement.classList.add('new-cell');
+                        setTimeout(() => newElement.classList.remove('new-cell'), 500);
+                    }
+
                     newRowData.push({
                         value: valueToSet,
-                        element: newElement, 
+                        element: newElement,
                         row: r, col: c,
-                        id: `cell-${r}-${c}-${Date.now()}`, 
+                        id: `cell-${r}-${c}-${Date.now()}`,
                         centerX: 0, centerY: 0, collisionRadius: 0
                     });
                 }
                 newMasterCellsData.push(newRowData);
             }
-            cellsData = newMasterCellsData; 
-            resizeCanvasAndCells(); 
-            updateAllCellDisplays(); 
+            cellsData = newMasterCellsData;
+            resizeCanvasAndCells();
+            updateAllCellDisplays();
         }
 
         function updateScoreDisplay() {
@@ -650,18 +765,18 @@
 
         eventAreaForInteraction.addEventListener('mousedown', handleInteractionStart);
         document.addEventListener('mousemove', handleInteractionMove);
-        document.addEventListener('mouseup', handleInteractionEnd); 
+        document.addEventListener('mouseup', handleInteractionEnd);
 
         eventAreaForInteraction.addEventListener('touchstart', handleInteractionStart, { passive: false });
         document.addEventListener('touchmove', handleInteractionMove, { passive: false });
         document.addEventListener('touchend', handleInteractionEnd);
-        document.addEventListener('touchcancel', handleInteractionEnd); 
+        document.addEventListener('touchcancel', handleInteractionEnd);
 
         initGame();
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js') // sw.jsのパスを指定
+                navigator.serviceWorker.register('./sw.js')
                     .then(registration => {
                         console.log('Service Worker registered: ', registration);
                     })
