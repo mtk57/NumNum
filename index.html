@@ -300,7 +300,7 @@
         <div id="controls-area">
             <button id="give-up-button" class="action-button">ギブアップ</button>
             <button id="manual-check-update-button" class="action-button">更新を確認</button> </div>
-        <div id="version-display">ver 1.7</div> </div>
+        <div id="version-display">ver 1.8</div> </div>
 
     <script>
         // --- 定数とグローバル変数 ---
@@ -869,61 +869,54 @@
         // --- 手動更新確認ボタンのロジック ---
         if (manualCheckUpdateButton) {
             manualCheckUpdateButton.addEventListener('click', () => {
-                console.log('[PWA Update] Manual "Check for Updates" button clicked.');
+                alert('「更新を確認」ボタンが押されました。');
                 messageArea.textContent = ""; // Clear previous messages
 
                 if (!navigator.serviceWorker || !navigator.serviceWorker.getRegistration) {
-                    console.warn('[PWA Update] Service Worker API not available.');
-                    messageArea.textContent = "Service Workerが利用できません。";
+                    alert('エラー: Service Worker APIが利用できません。');
                     return;
                 }
 
                 navigator.serviceWorker.getRegistration().then(registration => {
                     if (!registration) {
-                        console.log('[PWA Update] Manual check: No active Service Worker registration found.');
-                        messageArea.textContent = "更新チェック機能が有効ではありません。";
+                        alert('エラー: Service Workerの登録が見つかりません。');
                         return;
                     }
 
-                    // 1. 既に待機中のSWがいるか確認
+                    // 1. 既に待機中のSWがいないか確認
                     if (registration.waiting) {
-                        newWorker = registration.waiting; // newWorker を更新
-                        console.log('[PWA Update] Manual check: An update is already waiting. Showing notification.');
-                        messageArea.textContent = "新しいバージョンが待機中です！";
-                        showUpdateNotification(); 
+                        alert('発見: 更新がすでに待機中です。通知を表示します。');
+                        newWorker = registration.waiting;
+                        showUpdateNotification();
                         return;
                     }
 
                     // 2. サーバーに新しいバージョンがないか確認
-                    console.log('[PWA Update] Manual check: Calling registration.update().');
+                    alert('チェック開始: サーバーに新しいバージョンがないか確認します。');
                     messageArea.textContent = "更新を確認中...";
+
                     registration.update()
-                        .then(updatedReg => { // updatedReg は registration と同じオブジェクト
-                            // registration.update()が解決した後、再度waitingとinstallingを確認
+                        .then(updatedReg => {
                             if (updatedReg.installing) {
-                                console.log('[PWA Update] Manual check: Update found by reg.update(), now installing.');
+                                alert('発見: 新しいバージョンが見つかり、インストール中です。');
                                 messageArea.textContent = "新しいバージョンをインストール中...";
-                                // 'updatefound' イベントリスナーがこれを処理するはずだが、念のためtrackInstallingを呼ぶ
-                                if (!newWorker || newWorker !== updatedReg.installing) { // newWorkerが未設定か、別のinstallingワーカーの場合
-                                   newWorker = updatedReg.installing;
-                                   trackInstalling(newWorker);
-                                }
+                                // trackInstallingが後続処理を行います
                             } else if (updatedReg.waiting) {
-                                newWorker = updatedReg.waiting; // newWorker を更新
-                                console.log('[PWA Update] Manual check: Update found by reg.update(), now waiting.');
+                                alert('発見: 新しいバージョンが見つかり、待機状態になりました。');
                                 messageArea.textContent = "新しいバージョンが見つかりました！";
+                                newWorker = updatedReg.waiting;
                                 showUpdateNotification();
                             } else {
-                                console.log('[PWA Update] Manual check: reg.update() completed. No new version found or already up to date.');
+                                alert('結果: 新しいバージョンは見つかりませんでした。現在最新です。');
                                 messageArea.textContent = "現在、最新バージョンです。";
                             }
                         })
                         .catch(err => {
-                            console.error('[PWA Update] Manual check: registration.update() failed:', err);
+                            alert('エラー: 更新チェック中に問題が発生しました。\n' + err.message);
                             messageArea.textContent = "更新チェックに失敗しました。";
                         });
                 }).catch(err => {
-                    console.error('[PWA Update] Manual check: getRegistration() failed:', err);
+                    alert('エラー: Service Workerの登録取得に失敗しました。\n' + err.message);
                     messageArea.textContent = "更新機能の状態取得に失敗しました。";
                 });
             });
