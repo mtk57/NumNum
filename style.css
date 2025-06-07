@@ -1,0 +1,247 @@
+/* --- 全体レイアウト --- */
+body {
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #fff0f5; /* ラベンダーブラッシュ (薄いピンク) */
+    color: #6d4c41; /* ブラウン系 */
+    margin: 0;
+    overflow: hidden;
+    touch-action: none;
+}
+
+#game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #ffffff; /* ホワイト */
+    box-shadow: 0 10px 20px rgba(211, 175, 189, 0.25); /* ピンク系の影 */
+    padding: 20px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* --- ゲーム盤のレイアウト --- */
+#game-board {
+    position: relative;
+    width: 100%;
+    max-width: 370px;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto 15px auto;
+}
+
+#glow-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+#grid-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+#grid-container {
+    position: absolute;
+    top: 25px;
+    left: 25px;
+    right: 25px;
+    bottom: 25px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 8px;
+    z-index: 2;
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+/* --- セルとエフェクト --- */
+.cell {
+    background-color: #ffe4e1; /* ミスティーローズ */
+    color: #a1887f; /* ブラウンがかったグレー */
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.75rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease, opacity 0.3s ease;
+    position: relative;
+    aspect-ratio: 1 / 1;
+    width: 88%;
+    height: 88%;
+    justify-self: center;
+    align-self: center;
+}
+
+.cell.selected {
+    background-color: #ff80ab; /* 明るいピンク */
+    color: #ffffff; /* ホワイト */
+    transform: scale(1.15);
+}
+
+.glow-node {
+    position: absolute;
+    border-radius: 50%;
+    box-shadow: 0 0 15px #ff80ab, 0 0 25px #ff80ab;
+    transition: opacity 0.2s;
+}
+
+#line-canvas {
+    position: absolute;
+    top: 25px;
+    left: 25px;
+    right: 25px;
+    bottom: 25px;
+    pointer-events: none;
+    z-index: 1; 
+}
+
+/* --- クリア時のアニメーション --- */
+.cell.clearing {
+    animation: cellClearEffect 0.6s forwards ease-out;
+}
+@keyframes cellClearEffect {
+    0% { opacity: 1; transform: scale(1.1) rotate(0deg); background-color: #ffd180; }
+    50% { transform: scale(1.3) rotate(180deg); opacity: 0.7; }
+    100% { opacity: 0; transform: scale(0.3) rotate(360deg); background-color: #ffd180; }
+}
+.cell.falling {
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.cell.new-cell {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.5);
+    animation: newCellAppear 0.5s forwards cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes newCellAppear {
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* --- パーティクル --- */
+.particle {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background-color: #ffd180;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 4;
+    opacity: 1;
+    animation: particle-effect 0.8s forwards ease-out;
+}
+@keyframes particle-effect {
+    0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; background-color: #ffe0b2; }
+    50% { transform: translate(var(--particle-mid-x), var(--particle-mid-y)) scale(1.5) rotate(180deg); opacity: 0.8; background-color: #ffb74d; }
+    100% { transform: translate(var(--particle-x), var(--particle-y)) scale(0) rotate(360deg); opacity: 0; }
+}
+
+/* --- UI要素 --- */
+#mission-display {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 12px;
+    text-align: center;
+    color: #ec407a;
+    min-height: 3em;
+}
+#score-display {
+    font-size: 1rem;
+    margin-bottom: 12px;
+}
+#message-area {
+    min-height: 1.5em;
+    margin-top: 10px;
+    font-weight: bold;
+    color: #4db6ac;
+}
+#controls-area {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+.action-button {
+    background-color: #f06292;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.action-button:hover {
+    background-color: #e91e63;
+}
+#version-display {
+    position: absolute;
+    bottom: 5px;
+    left: 10px;
+    font-size: 0.75rem;
+    color: #bcaaa4;
+}
+
+/* --- 更新通知 --- */
+#update-notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #4db6ac;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1000;
+    display: none;
+    text-align: center;
+}
+#update-notification.show {
+    display: block;
+    animation: slideDown 0.3s ease-out;
+}
+@keyframes slideDown {
+    from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+#update-button {
+    background-color: #ffffff;
+    color: #4db6ac;
+    border: none;
+    padding: 5px 15px;
+    margin-left: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+#update-button:hover {
+    background-color: #f0fdfa;
+}
+
+/* --- レスポンシブ対応 --- */
+@media (max-width: 360px) {
+    .cell { font-size: 1.25rem; }
+    #mission-display { font-size: 0.9rem; }
+    .action-button { padding: 8px 12px; font-size: 0.8rem; }
+    .particle { width: 8px; height: 8px; }
+    #version-display { font-size: 0.65rem; left: 5px; }
+    #update-notification { width: calc(100% - 20px); top: 10px; left: 10px; right: 10px; transform: none; font-size: 0.8rem; }
+}
