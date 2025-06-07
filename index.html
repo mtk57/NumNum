@@ -17,8 +17,10 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #1a202c;
-            color: #e2e8f0;
+            /* ▼▼▼ 変更 ▼▼▼ */
+            background-color: #fff0f5; /* ラベンダーブラッシュ (薄いピンク) */
+            color: #6d4c41; /* ブラウン系 */
+            /* ▲▲▲ 変更 ▲▲▲ */
             margin: 0;
             overflow: hidden;
             touch-action: none;
@@ -28,10 +30,12 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #2d3748;
+            /* ▼▼▼ 変更 ▼▼▼ */
+            background-color: #ffffff; /* ホワイト */
+            box-shadow: 0 10px 20px rgba(211, 175, 189, 0.25); /* ピンク系の影 */
+            /* ▲▲▲ 変更 ▲▲▲ */
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
             width: 100%;
             max-width: 400px;
             box-sizing: border-box;
@@ -89,14 +93,16 @@
 
         /* --- セルとエフェクト --- */
         .cell {
-            background-color: #4a5568;
+            /* ▼▼▼ 変更 ▼▼▼ */
+            background-color: #ffe4e1; /* ミスティーローズ */
+            color: #a1887f; /* ブラウンがかったグレー */
+            /* ▲▲▲ 変更 ▲▲▲ */
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 1.75rem;
             font-weight: bold;
-            color: #edf2f7;
             cursor: pointer;
             transition: transform 0.2s ease, background-color 0.2s ease, opacity 0.3s ease;
             position: relative;
@@ -113,15 +119,19 @@
         }
 
         .cell.selected {
-            background-color: #63b3ed;
+            /* ▼▼▼ 変更 ▼▼▼ */
+            background-color: #ff80ab; /* 明るいピンク */
+            color: #ffffff; /* ホワイト */
+            /* ▲▲▲ 変更 ▲▲▲ */
             transform: scale(1.15);
-            color: #1a202c;
         }
 
         .glow-node {
             position: absolute;
             border-radius: 50%;
-            box-shadow: 0 0 15px #63b3ed, 0 0 25px #63b3ed;
+            /* ▼▼▼ 変更 ▼▼▼ */
+            box-shadow: 0 0 15px #ff80ab, 0 0 25px #ff80ab; /* 選択色に合わせる */
+            /* ▲▲▲ 変更 ▲▲▲ */
             transition: opacity 0.2s;
         }
 
@@ -139,13 +149,15 @@
 
         /* --- クリア時のアニメーション --- */
         .cell.clearing {
+            /* ▼▼▼ 変更 ▼▼▼ */
             animation: cellClearEffect 0.6s forwards ease-out;
         }
         @keyframes cellClearEffect {
-            0% { opacity: 1; transform: scale(1.1) rotate(0deg); background-color: #fbd38d; }
+            0% { opacity: 1; transform: scale(1.1) rotate(0deg); background-color: #ffd180; /* 明るいアンバー */ }
             50% { transform: scale(1.3) rotate(180deg); opacity: 0.7; }
-            100% { opacity: 0; transform: scale(0.3) rotate(360deg); background-color: #fbd38d; }
+            100% { opacity: 0; transform: scale(0.3) rotate(360deg); background-color: #ffd180; /* 明るいアンバー */ }
         }
+        /* ▲▲▲ 変更 ▲▲▲ */
         .cell.falling {
             transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -163,18 +175,22 @@
             position: absolute;
             width: 12px;
             height: 12px;
-            background-color: #fbd38d;
+            /* ▼▼▼ 変更 ▼▼▼ */
+            background-color: #ffd180; /* 明るいアンバー */
+            /* ▲▲▲ 変更 ▲▲▲ */
             border-radius: 50%;
             pointer-events: none;
             z-index: 4;
             opacity: 1;
             animation: particle-effect 0.8s forwards ease-out;
         }
+        /* ▼▼▼ 変更 ▼▼▼ */
         @keyframes particle-effect {
-            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; background-color: #fee2b3; }
-            50% { transform: translate(var(--particle-mid-x), var(--particle-mid-y)) scale(1.5) rotate(180deg); opacity: 0.8; background-color: #f6ad55; }
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; background-color: #ffe0b2; /* 薄いオレンジ */ }
+            50% { transform: translate(var(--particle-mid-x), var(--particle-mid-y)) scale(1.5) rotate(180deg); opacity: 0.8; background-color: #ffb74d; /* ミディアムオレンジ */ }
             100% { transform: translate(var(--particle-x), var(--particle-y)) scale(0) rotate(360deg); opacity: 0; }
         }
+        /* ▲▲▲ 変更 ▲▲▲ */
 
         /* --- UI要素 --- */
         #mission-display {
@@ -182,7 +198,9 @@
             font-weight: bold;
             margin-bottom: 12px;
             text-align: center;
-            color: #90cdf4;
+            /* ▼▼▼ 変更 ▼▼▼ */
+            color: #ec407a; /* ビビッドピンク */
+            /* ▲▲▲ 変更 ▲▲▲ */
             min-height: 3em;
         }
         #score-display {
@@ -193,7 +211,9 @@
             min-height: 1.5em;
             margin-top: 10px;
             font-weight: bold;
-            color: #68d391;
+            /* ▼▼▼ 変更 ▼▼▼ */
+            color: #4db6ac; /* ティールグリーン */
+            /* ▲▲▲ 変更 ▲▲▲ */
         }
         #controls-area {
             display: flex;
@@ -203,7 +223,9 @@
             margin-top: 10px;
         }
         .action-button {
-            background-color: #4299e1;
+            /* ▼▼▼ 変更 ▼▼▼ */
+            background-color: #f06292; /* ライトピンク */
+            /* ▲▲▲ 変更 ▲▲▲ */
             color: white;
             padding: 10px 15px;
             border: none;
@@ -213,14 +235,18 @@
             transition: background-color 0.2s;
         }
         .action-button:hover {
-            background-color: #3182ce;
+            /* ▼▼▼ 変更 ▼▼▼ */
+            background-color: #e91e63; /* ピンク */
+            /* ▲▲▲ 変更 ▲▲▲ */
         }
         #version-display {
             position: absolute;
             bottom: 5px;
             left: 10px;
             font-size: 0.75rem;
-            color: #a0aec0;
+            /* ▼▼▼ 変更 ▼▼▼ */
+            color: #bcaaa4; /* ライトブラウン */
+            /* ▲▲▲ 変更 ▲▲▲ */
         }
 
         /* --- 更新通知 --- */
@@ -229,7 +255,9 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: #38a169;
+            /* ▼▼▼ 変更 ▼▼▼ */
+            background-color: #4db6ac; /* ティールグリーン */
+            /* ▲▲▲ 変更 ▲▲▲ */
             color: white;
             padding: 10px 20px;
             border-radius: 8px;
@@ -247,8 +275,10 @@
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
         #update-button {
-            background-color: #2d3748;
-            color: white;
+            /* ▼▼▼ 変更 ▼▼▼ */
+            background-color: #ffffff; /* ホワイト */
+            color: #4db6ac; /* ティールグリーン */
+            /* ▲▲▲ 変更 ▲▲▲ */
             border: none;
             padding: 5px 15px;
             margin-left: 10px;
@@ -257,7 +287,9 @@
             font-size: 0.8rem;
         }
         #update-button:hover {
-            background-color: #1a202c;
+            /* ▼▼▼ 変更 ▼▼▼ */
+            background-color: #f0fdfa; /* 非常に薄いティール */
+            /* ▲▲▲ 変更 ▲▲▲ */
         }
 
         /* --- レスポンシブ対応 --- */
@@ -292,7 +324,7 @@
         <div id="controls-area">
             <button id="give-up-button" class="action-button">ギブアップ</button>
             <button id="manual-check-update-button" class="action-button">更新を確認</button> </div>
-        <div id="version-display">ver1.16</div> </div>
+        <div id="version-display">ver1.17</div> </div>
 
     <script>
         // --- 定数とグローバル変数 ---
@@ -693,7 +725,9 @@
             clearCanvas();
             if (selectedCells.length < 2) return;
             canvasCtx.beginPath();
-            canvasCtx.strokeStyle = '#63b3ed';
+            /* ▼▼▼ 変更 ▼▼▼ */
+            canvasCtx.strokeStyle = '#ff80ab'; /* 明るいピンク (選択色に合わせる) */
+            /* ▲▲▲ 変更 ▲▲▲ */
             canvasCtx.lineWidth = Math.max(3, gridContainer.offsetWidth / 70);
             canvasCtx.lineCap = 'round';
             canvasCtx.lineJoin = 'round';
