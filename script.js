@@ -7,6 +7,7 @@ const DEBUG_SHOW_COLLISION_CIRCLES = false;
 const NUM_PARTICLES_PER_CELL = 12;
 const PARTICLE_BASE_SIZE_PX = 12;
 
+// --- DOM Element Selections ---
 const gridContainer = document.getElementById('grid-container');
 const lineCanvas = document.getElementById('line-canvas');
 const canvasCtx = lineCanvas.getContext('2d');
@@ -16,15 +17,18 @@ const messageArea = document.getElementById('message-area');
 const giveUpButton = document.getElementById('give-up-button');
 const gridArea = document.getElementById('grid-area');
 const glowLayer = document.getElementById('glow-layer');
+// PWAハンドラからも参照されるDOM要素
 const updateNotification = document.getElementById('update-notification');
 const updateButton = document.getElementById('update-button');
 const manualCheckUpdateButton = document.getElementById('manual-check-update-button');
 
+// --- Sound Initialization ---
 const selectSounds = [ new Howl({ src: ['sounds/se1.mp3'], volume: 0.7 }) ];
 const successSound = new Howl({ src: ['sounds/success.mp3'] });
 const failureSound = new Howl({ src: ['sounds/failure.mp3'] });
 const clearSound = new Howl({ src: ['sounds/clear.mp3'] });
 
+// --- Game State Variables ---
 let cellsData = [];
 let selectedCells = [];
 let currentMission = { type: 'sum', target: 0, text: "" };
@@ -32,16 +36,14 @@ let score = 0;
 let isDrawing = false;
 let missionsSinceLastLevelUp = 0;
 let currentLevel = 1;
+// PWAハンドラからも参照されるグローバル変数
 let newWorker = null;
-let refreshing = false;
 
 // --- ゲームロジック ---
 
 function initGame() {
     gridContainer.innerHTML = '';
     cellsData = [];
-    document.querySelectorAll('.debug-collision-circle').forEach(el => el.remove());
-    document.querySelectorAll('.particle').forEach(el => el.remove());
     missionsSinceLastLevelUp = 0;
     currentLevel = 1;
     score = 0;
@@ -77,7 +79,7 @@ function updateAllCellDisplays() {
     for (let r = 0; r < GRID_SIZE; r++) {
         for (let c = 0; c < GRID_SIZE; c++) {
             const cellObj = cellsData[r][c];
-            if (cellObj && cellObj.element) {
+            if (cellObj?.element) {
                  cellObj.element.textContent = cellObj.value === null ? '' : cellObj.value.toString();
             }
         }
@@ -88,12 +90,11 @@ function resizeCanvasAndCells() {
     const gridRect = gridContainer.getBoundingClientRect();
     lineCanvas.width = gridRect.width;
     lineCanvas.height = gridRect.height;
-    document.querySelectorAll('.debug-collision-circle').forEach(el => el.remove());
     if (!cellsData || cellsData.length === 0) return;
     for (let r = 0; r < GRID_SIZE; r++) {
         for (let c = 0; c < GRID_SIZE; c++) {
             const cellObj = cellsData[r][c];
-            if (!cellObj || !cellObj.element) continue;
+            if (!cellObj?.element) continue;
             const cellRect = cellObj.element.getBoundingClientRect();
             cellObj.centerX = (cellRect.left - gridRect.left) + (cellRect.width / 2);
             cellObj.centerY = (cellRect.top - gridRect.top) + (cellRect.height / 2);
@@ -116,8 +117,7 @@ function generateNewMission() {
             updateMissionDisplay();
             return;
         }
-        let numToPick = Math.floor(Math.random() * 2) + 2;
-        numToPick = Math.min(numToPick, availableCells.length);
+        let numToPick = Math.min(Math.floor(Math.random() * 2) + 2, availableCells.length);
         let potentialSolutionCells = [];
         for(let i=0; i<numToPick; i++) {
              if(availableCells.length === 0) break;
@@ -141,8 +141,8 @@ function generateNewMission() {
 
 function checkMission() {
     if (selectedCells.length < 2) return false;
-    const values = selectedCells.map(cell => cell.value);
-    const result = values.reduce((acc, val) => acc + val, 0);
+    // Number() を使って、各セルの値を確実に「数値」として合計する
+    const result = selectedCells.reduce((acc, cell) => acc + Number(cell.value), 0);
     return result === currentMission.target;
 }
 
@@ -204,9 +204,7 @@ function addCellToSelection(event) {
     if (!targetCellData || selectedCells.find(sc => sc.id === targetCellData.id)) return;
     if (selectedCells.length > 0) {
         const lastCell = selectedCells[selectedCells.length - 1];
-        const rowDiff = Math.abs(lastCell.row - targetCellData.row);
-        const colDiff = Math.abs(lastCell.col - targetCellData.col);
-        if (rowDiff > 1 || colDiff > 1) return;
+        if (Math.abs(lastCell.row - targetCellData.row) > 1 || Math.abs(lastCell.col - targetCellData.col) > 1) return;
     }
     selectedCells.push(targetCellData);
     if(targetCellData.element) targetCellData.element.classList.add('selected');
@@ -217,17 +215,14 @@ function addCellToSelection(event) {
         const gridContainerStyle = window.getComputedStyle(gridContainer);
         const gridPaddingLeft = parseFloat(gridContainerStyle.left) || 0;
         const gridPaddingTop = parseFloat(gridContainerStyle.top) || 0;
-        const cellLeft = cellElem.offsetLeft + gridPaddingLeft;
-        const cellTop = cellElem.offsetTop + gridPaddingTop;
         glowNode.style.width = `${cellElem.offsetWidth}px`;
         glowNode.style.height = `${cellElem.offsetHeight}px`;
-        glowNode.style.left = `${cellLeft}px`;
-        glowNode.style.top = `${cellTop}px`;
+        glowNode.style.left = `${cellElem.offsetLeft + gridPaddingLeft}px`;
+        glowNode.style.top = `${cellElem.offsetTop + gridPaddingTop}px`;
         glowLayer.appendChild(glowNode);
     }
     try {
-        const soundIndex = Math.min(selectedCells.length - 1, selectSounds.length - 1);
-        selectSounds[soundIndex].play();
+        selectSounds[Math.min(selectedCells.length - 1, selectSounds.length - 1)].play();
     } catch (e) {
         console.error("サウンドの再生に失敗しました: ", e);
     }
@@ -237,10 +232,10 @@ function addCellToSelection(event) {
 function getCellFromEvent(event) {
     const gridRect = gridContainer.getBoundingClientRect();
     let clientX, clientY;
-    if (event.touches && event.touches.length > 0) {
+    if (event.touches?.length) {
         clientX = event.touches[0].clientX;
         clientY = event.touches[0].clientY;
-    } else if (event.changedTouches && event.changedTouches.length > 0) {
+    } else if (event.changedTouches?.length) {
         clientX = event.changedTouches[0].clientX;
         clientY = event.changedTouches[0].clientY;
     } else {
@@ -249,11 +244,10 @@ function getCellFromEvent(event) {
     }
     const pointerX = clientX - gridRect.left;
     const pointerY = clientY - gridRect.top;
-    for (let r = 0; r < GRID_SIZE; r++) {
-        for (let c = 0; c < GRID_SIZE; c++) {
-            const cell = cellsData[r][c];
+    for (const row of cellsData) {
+        for (const cell of row) {
             if (!cell) continue;
-            const distance = Math.sqrt(Math.pow(pointerX - cell.centerX, 2) + Math.pow(pointerY - cell.centerY, 2));
+            const distance = Math.hypot(pointerX - cell.centerX, pointerY - cell.centerY);
             if (distance < cell.collisionRadius) return cell;
         }
     }
@@ -261,9 +255,7 @@ function getCellFromEvent(event) {
 }
 
 function clearSelection() {
-    selectedCells.forEach(cell => {
-        if (cell && cell.element) cell.element.classList.remove('selected');
-    });
+    selectedCells.forEach(cell => cell.element?.classList.remove('selected'));
     selectedCells = [];
     clearCanvas();
     if (glowLayer) glowLayer.innerHTML = '';
@@ -277,10 +269,9 @@ function drawLines() {
     canvasCtx.lineWidth = Math.max(3, gridContainer.offsetWidth / 70);
     canvasCtx.lineCap = 'round';
     canvasCtx.lineJoin = 'round';
-    for (let i = 0; i < selectedCells.length; i++) {
-        const cell = selectedCells[i];
-        if (i === 0) canvasCtx.moveTo(cell.centerX, cell.centerY);
-        else canvasCtx.lineTo(cell.centerX, cell.centerY);
+    canvasCtx.moveTo(selectedCells[0].centerX, selectedCells[0].centerY);
+    for (let i = 1; i < selectedCells.length; i++) {
+        canvasCtx.lineTo(selectedCells[i].centerX, selectedCells[i].centerY);
     }
     canvasCtx.stroke();
 }
@@ -296,20 +287,14 @@ function createParticles(cell) {
     for (let i = 0; i < NUM_PARTICLES_PER_CELL; i++) {
         const particle = document.createElement('div');
         particle.classList.add('particle');
-        const particleSize = PARTICLE_BASE_SIZE_PX;
-        particle.style.left = `${startX - particleSize / 2}px`;
-        particle.style.top = `${startY - particleSize / 2}px`;
         const angle = Math.random() * Math.PI * 2;
         const distance = Math.random() * 60 + 30;
-        const midDistance = distance * 0.5;
-        const endX = Math.cos(angle) * distance;
-        const endY = Math.sin(angle) * distance;
-        const midX = Math.cos(angle) * midDistance;
-        const midY = Math.sin(angle) * midDistance;
-        particle.style.setProperty('--particle-x', `${endX}px`);
-        particle.style.setProperty('--particle-y', `${endY}px`);
-        particle.style.setProperty('--particle-mid-x', `${midX}px`);
-        particle.style.setProperty('--particle-mid-y', `${midY}px`);
+        particle.style.left = `${startX - PARTICLE_BASE_SIZE_PX / 2}px`;
+        particle.style.top = `${startY - PARTICLE_BASE_SIZE_PX / 2}px`;
+        particle.style.setProperty('--particle-x', `${Math.cos(angle) * distance}px`);
+        particle.style.setProperty('--particle-y', `${Math.sin(angle) * distance}px`);
+        particle.style.setProperty('--particle-mid-x', `${Math.cos(angle) * distance * 0.5}px`);
+        particle.style.setProperty('--particle-mid-y', `${Math.sin(angle) * distance * 0.5}px`);
         particle.style.animationDelay = `${Math.random() * 0.25}s`;
         gridArea.appendChild(particle);
         particle.addEventListener('animationend', () => particle.remove());
@@ -322,7 +307,7 @@ async function processClearedCells() {
     clearSound.play();
     cellsToClear.forEach(cell => createParticles(cell));
     const removalPromises = cellsToClear.map(cell => {
-        if(cell && cell.element) {
+        if(cell?.element) {
             cell.element.classList.add('clearing');
             return new Promise(resolve => setTimeout(resolve, 600));
         }
@@ -330,17 +315,16 @@ async function processClearedCells() {
     });
     await Promise.all(removalPromises);
     cellsToClear.forEach(clearedCell => {
-        if (clearedCell?.row !== undefined && clearedCell?.col !== undefined && cellsData[clearedCell.row]?.[clearedCell.col]) {
+        if (clearedCell?.row !== undefined && cellsData[clearedCell.row]?.[clearedCell.col]) {
             cellsData[clearedCell.row][clearedCell.col].value = null;
-            if(clearedCell.element) {
-                clearedCell.element.classList.remove('clearing');
-            }
+            clearedCell.element?.classList.remove('clearing');
         }
     });
     await applyGravityAndRefill();
     generateNewMission();
 }
 
+// ▼▼▼ 修正箇所 2/2 (前回省略されていた関数の完全な実装) ▼▼▼
 async function applyGravityAndRefill() {
     const animationPromises = [];
     for (let c = 0; c < GRID_SIZE; c++) {
@@ -409,19 +393,7 @@ function updateScoreDisplay() {
     scoreDisplay.textContent = score;
 }
 
-// --- Service Worker と イベントリスナー ---
-function showUpdateNotification() { updateNotification.classList.add('show'); }
-function hideUpdateNotification() { updateNotification.classList.remove('show'); }
-function handleUpdate() { if (newWorker) newWorker.postMessage({ action: 'skipWaiting' }); hideUpdateNotification(); }
-function trackInstalling(worker) {
-    worker.addEventListener('statechange', () => {
-        if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-            newWorker = worker;
-            showUpdateNotification();
-        }
-    });
-}
-
+// --- イベントリスナー設定 ---
 const eventAreaForInteraction = document.getElementById('grid-area');
 eventAreaForInteraction.addEventListener('mousedown', handleInteractionStart);
 document.addEventListener('mousemove', handleInteractionMove);
@@ -431,62 +403,7 @@ document.addEventListener('touchmove', handleInteractionMove, { passive: false }
 document.addEventListener('touchend', handleInteractionEnd);
 document.addEventListener('touchcancel', handleInteractionEnd);
 giveUpButton.addEventListener('click', handleGiveUp);
-updateButton.addEventListener('click', handleUpdate);
 window.addEventListener('resize', resizeCanvasAndCells);
-
-if (manualCheckUpdateButton) {
-    manualCheckUpdateButton.addEventListener('click', () => {
-        messageArea.textContent = "";
-        if (!navigator.serviceWorker?.getRegistration) {
-            messageArea.textContent = "Service Workerが利用できません。";
-            return;
-        }
-        navigator.serviceWorker.getRegistration().then(registration => {
-            if (!registration) {
-                messageArea.textContent = "更新チェック機能が有効ではありません。";
-                return;
-            }
-            if (registration.waiting) {
-                newWorker = registration.waiting;
-                messageArea.textContent = "新しいバージョンが待機中です！";
-                showUpdateNotification();
-                return;
-            }
-            messageArea.textContent = "更新を確認中...";
-            registration.update().then(updatedReg => {
-                if (updatedReg.installing) {
-                    messageArea.textContent = "新しいバージョンをインストール中...";
-                    if (!newWorker || newWorker !== updatedReg.installing) {
-                       newWorker = updatedReg.installing;
-                       trackInstalling(newWorker);
-                    }
-                } else if (updatedReg.waiting) {
-                    newWorker = updatedReg.waiting;
-                    messageArea.textContent = "新しいバージョンが見つかりました！";
-                    showUpdateNotification();
-                } else {
-                    messageArea.textContent = "現在、最新バージョンです。";
-                }
-            }).catch(err => messageArea.textContent = "更新チェックに失敗しました。");
-        }).catch(err => messageArea.textContent = "更新機能の状態取得に失敗しました。");
-    });
-}
-
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js', { scope: './' }).then(registration => {
-            if (registration.waiting) { newWorker = registration.waiting; showUpdateNotification(); }
-            if (registration.installing) { trackInstalling(registration.installing); }
-            registration.addEventListener('updatefound', () => trackInstalling(registration.installing));
-        }).catch(error => console.error('Service Worker registration failed:', error));
-        let refreshingReloadFlag;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (refreshingReloadFlag) return;
-            window.location.reload();
-            refreshingReloadFlag = true;
-        });
-    });
-}
 
 // --- ゲーム初期化 ---
 initGame();
