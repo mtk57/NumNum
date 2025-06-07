@@ -282,6 +282,7 @@
             }
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
 </head>
 <body>
     <div id="update-notification">
@@ -300,7 +301,7 @@
         <div id="controls-area">
             <button id="give-up-button" class="action-button">ギブアップ</button>
             <button id="manual-check-update-button" class="action-button">更新を確認</button> </div>
-        <div id="version-display">ver 1.12</div> </div>
+        <div id="version-display">ver 1.13</div> </div>
 
     <script>
         // --- 定数とグローバル変数 ---
@@ -323,6 +324,13 @@
         const updateNotification = document.getElementById('update-notification');
         const updateButton = document.getElementById('update-button');
         const manualCheckUpdateButton = document.getElementById('manual-check-update-button'); // 追加
+
+        // 効果音ファイルを読み込み、Howlオブジェクトを作成します。
+        // ファイルパスはご自身の環境に合わせて変更してください。
+        const selectSounds = [
+            new Howl({ src: ['sounds/se1.mp3'], volume: 0.7 })
+            // 必要なだけ音を追加できます
+        ];
 
         let cellsData = [];
         let selectedCells = [];
@@ -599,6 +607,23 @@
             if (alreadySelectedInPath) return;
             selectedCells.push(targetCellData);
             if(targetCellData.element) targetCellData.element.classList.add('selected');
+
+            // 選択されたセルの数に応じて音を鳴らします。
+            try {
+                // 選択されたセルの数が、用意した音の数より少ない場合
+                if (selectedCells.length <= selectSounds.length) {
+                    // 配列のインデックスは0から始まるので、-1 します
+                    const soundIndex = selectedCells.length - 1;
+                    selectSounds[soundIndex].play();
+                } else {
+                    // 用意した音の数を超えて選択された場合は、最後の音を鳴らします
+                    selectSounds[selectSounds.length - 1].play();
+                }
+            } catch (e) {
+                // 音声ファイルの読み込み失敗などでエラーが出てもゲームが止まらないように
+                console.error("サウンドの再生に失敗しました: ", e);
+            }
+
             drawLines();
         }
 
