@@ -146,13 +146,22 @@ function handleInteractionEnd(event) {
         processClearedCells();
     } else {
         if (selectedCells.length > 0) {
-            messageArea.textContent = "残念！もう一度挑戦。";
-            setTimeout(() => {
-                clearSelection();
-                if (messageArea.textContent === "残念！もう一度挑戦。") messageArea.textContent = "";
-            }, 1000);
-        } else {
+            failureSound.play();
+            const failedCells = [...selectedCells];
+
             clearSelection();
+
+            failedCells.forEach(cell => {
+                if (cell.element) {
+                    cell.element.classList.add('failed');
+                }
+            });
+
+            setTimeout(() => {
+                failedCells.forEach(cell => {
+                    cell.element?.classList.remove('failed');
+                });
+            }, 500);
         }
     }
 }

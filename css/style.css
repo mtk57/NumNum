@@ -96,6 +96,13 @@ body {
     transform: scale(1.15);
 }
 
+.cell.failed {
+    background-color: #bdbdbd; /* グレー */
+    color: #ffffff;
+    transform: scale(1.0);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
 .glow-node {
     position: absolute;
     border-radius: 50%;
