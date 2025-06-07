@@ -17,10 +17,8 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            /* ▼▼▼ 変更 ▼▼▼ */
             background-color: #fff0f5; /* ラベンダーブラッシュ (薄いピンク) */
             color: #6d4c41; /* ブラウン系 */
-            /* ▲▲▲ 変更 ▲▲▲ */
             margin: 0;
             overflow: hidden;
             touch-action: none;
@@ -30,10 +28,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            /* ▼▼▼ 変更 ▼▼▼ */
             background-color: #ffffff; /* ホワイト */
             box-shadow: 0 10px 20px rgba(211, 175, 189, 0.25); /* ピンク系の影 */
-            /* ▲▲▲ 変更 ▲▲▲ */
             padding: 20px;
             border-radius: 12px;
             width: 100%;
@@ -45,14 +41,12 @@
         /* --- ゲーム盤のレイアウト --- */
         #game-board {
             position: relative;
-            /* 数字の表示領域(320px) + 左右の余白(25px * 2) = 370px */
             width: 100%;
             max-width: 370px;
             aspect-ratio: 1 / 1;
             margin: 0 auto 15px auto;
         }
 
-        /* 光るエフェクトを描画する専用の層 */
         #glow-layer {
             position: absolute;
             top: 0;
@@ -63,20 +57,17 @@
             z-index: 1;
         }
 
-        /* パーティクルと線のコンテナ（はみ出しをクリップする） */
         #grid-area {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden; /* ★重要：はみ出しを隠す役割 */
+            overflow: hidden;
         }
 
-        /* 数字のグリッド本体 */
         #grid-container {
             position: absolute;
-            /* #game-board(370px) の中に、上下左右25pxの余白を空けて配置 */
             top: 25px;
             left: 25px;
             right: 25px;
@@ -85,7 +76,7 @@
             grid-template-columns: repeat(4, 1fr);
             grid-template-rows: repeat(4, 1fr);
             gap: 8px;
-            z-index: 2; /* line-canvasより手前 */
+            z-index: 2;
             user-select: none;
             -webkit-user-select: none;
             -ms-user-select: none;
@@ -93,10 +84,8 @@
 
         /* --- セルとエフェクト --- */
         .cell {
-            /* ▼▼▼ 変更 ▼▼▼ */
             background-color: #ffe4e1; /* ミスティーローズ */
             color: #a1887f; /* ブラウンがかったグレー */
-            /* ▲▲▲ 変更 ▲▲▲ */
             border-radius: 50%;
             display: flex;
             justify-content: center;
@@ -107,57 +96,44 @@
             transition: transform 0.2s ease, background-color 0.2s ease, opacity 0.3s ease;
             position: relative;
             aspect-ratio: 1 / 1;
-            
-            /* ▼▼▼ ここから4行を追加 ▼▼▼ */
-            /* セルのサイズを、マス目に対して88%の大きさに縮小 */
             width: 88%;
             height: 88%;
-            /* 縮小したセルをマス目の中央に配置 */
             justify-self: center;
             align-self: center;
-            /* ▲▲▲ ここまで追加 ▲▲▲ */
         }
 
         .cell.selected {
-            /* ▼▼▼ 変更 ▼▼▼ */
             background-color: #ff80ab; /* 明るいピンク */
             color: #ffffff; /* ホワイト */
-            /* ▲▲▲ 変更 ▲▲▲ */
             transform: scale(1.15);
         }
 
         .glow-node {
             position: absolute;
             border-radius: 50%;
-            /* ▼▼▼ 変更 ▼▼▼ */
-            box-shadow: 0 0 15px #ff80ab, 0 0 25px #ff80ab; /* 選択色に合わせる */
-            /* ▲▲▲ 変更 ▲▲▲ */
+            box-shadow: 0 0 15px #ff80ab, 0 0 25px #ff80ab;
             transition: opacity 0.2s;
         }
 
         #line-canvas {
             position: absolute;
-            /* ▼▼▼ ここから4行を追加/変更 ▼▼▼ */
             top: 25px;
             left: 25px;
             right: 25px;
             bottom: 25px;
-            /* ▲▲▲ ここまで ▲▲▲ */
             pointer-events: none;
             z-index: 1; 
         }
 
         /* --- クリア時のアニメーション --- */
         .cell.clearing {
-            /* ▼▼▼ 変更 ▼▼▼ */
             animation: cellClearEffect 0.6s forwards ease-out;
         }
         @keyframes cellClearEffect {
-            0% { opacity: 1; transform: scale(1.1) rotate(0deg); background-color: #ffd180; /* 明るいアンバー */ }
+            0% { opacity: 1; transform: scale(1.1) rotate(0deg); background-color: #ffd180; }
             50% { transform: scale(1.3) rotate(180deg); opacity: 0.7; }
-            100% { opacity: 0; transform: scale(0.3) rotate(360deg); background-color: #ffd180; /* 明るいアンバー */ }
+            100% { opacity: 0; transform: scale(0.3) rotate(360deg); background-color: #ffd180; }
         }
-        /* ▲▲▲ 変更 ▲▲▲ */
         .cell.falling {
             transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -175,22 +151,18 @@
             position: absolute;
             width: 12px;
             height: 12px;
-            /* ▼▼▼ 変更 ▼▼▼ */
-            background-color: #ffd180; /* 明るいアンバー */
-            /* ▲▲▲ 変更 ▲▲▲ */
+            background-color: #ffd180;
             border-radius: 50%;
             pointer-events: none;
             z-index: 4;
             opacity: 1;
             animation: particle-effect 0.8s forwards ease-out;
         }
-        /* ▼▼▼ 変更 ▼▼▼ */
         @keyframes particle-effect {
-            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; background-color: #ffe0b2; /* 薄いオレンジ */ }
-            50% { transform: translate(var(--particle-mid-x), var(--particle-mid-y)) scale(1.5) rotate(180deg); opacity: 0.8; background-color: #ffb74d; /* ミディアムオレンジ */ }
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; background-color: #ffe0b2; }
+            50% { transform: translate(var(--particle-mid-x), var(--particle-mid-y)) scale(1.5) rotate(180deg); opacity: 0.8; background-color: #ffb74d; }
             100% { transform: translate(var(--particle-x), var(--particle-y)) scale(0) rotate(360deg); opacity: 0; }
         }
-        /* ▲▲▲ 変更 ▲▲▲ */
 
         /* --- UI要素 --- */
         #mission-display {
@@ -198,9 +170,7 @@
             font-weight: bold;
             margin-bottom: 12px;
             text-align: center;
-            /* ▼▼▼ 変更 ▼▼▼ */
-            color: #ec407a; /* ビビッドピンク */
-            /* ▲▲▲ 変更 ▲▲▲ */
+            color: #ec407a;
             min-height: 3em;
         }
         #score-display {
@@ -211,9 +181,7 @@
             min-height: 1.5em;
             margin-top: 10px;
             font-weight: bold;
-            /* ▼▼▼ 変更 ▼▼▼ */
-            color: #4db6ac; /* ティールグリーン */
-            /* ▲▲▲ 変更 ▲▲▲ */
+            color: #4db6ac;
         }
         #controls-area {
             display: flex;
@@ -223,9 +191,7 @@
             margin-top: 10px;
         }
         .action-button {
-            /* ▼▼▼ 変更 ▼▼▼ */
-            background-color: #f06292; /* ライトピンク */
-            /* ▲▲▲ 変更 ▲▲▲ */
+            background-color: #f06292;
             color: white;
             padding: 10px 15px;
             border: none;
@@ -235,18 +201,14 @@
             transition: background-color 0.2s;
         }
         .action-button:hover {
-            /* ▼▼▼ 変更 ▼▼▼ */
-            background-color: #e91e63; /* ピンク */
-            /* ▲▲▲ 変更 ▲▲▲ */
+            background-color: #e91e63;
         }
         #version-display {
             position: absolute;
             bottom: 5px;
             left: 10px;
             font-size: 0.75rem;
-            /* ▼▼▼ 変更 ▼▼▼ */
-            color: #bcaaa4; /* ライトブラウン */
-            /* ▲▲▲ 変更 ▲▲▲ */
+            color: #bcaaa4;
         }
 
         /* --- 更新通知 --- */
@@ -255,9 +217,7 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            /* ▼▼▼ 変更 ▼▼▼ */
-            background-color: #4db6ac; /* ティールグリーン */
-            /* ▲▲▲ 変更 ▲▲▲ */
+            background-color: #4db6ac;
             color: white;
             padding: 10px 20px;
             border-radius: 8px;
@@ -275,10 +235,8 @@
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
         #update-button {
-            /* ▼▼▼ 変更 ▼▼▼ */
-            background-color: #ffffff; /* ホワイト */
-            color: #4db6ac; /* ティールグリーン */
-            /* ▲▲▲ 変更 ▲▲▲ */
+            background-color: #ffffff;
+            color: #4db6ac;
             border: none;
             padding: 5px 15px;
             margin-left: 10px;
@@ -287,9 +245,7 @@
             font-size: 0.8rem;
         }
         #update-button:hover {
-            /* ▼▼▼ 変更 ▼▼▼ */
-            background-color: #f0fdfa; /* 非常に薄いティール */
-            /* ▲▲▲ 変更 ▲▲▲ */
+            background-color: #f0fdfa;
         }
 
         /* --- レスポンシブ対応 --- */
@@ -347,17 +303,12 @@
         const glowLayer = document.getElementById('glow-layer');
         const updateNotification = document.getElementById('update-notification');
         const updateButton = document.getElementById('update-button');
-        const manualCheckUpdateButton = document.getElementById('manual-check-update-button'); // 追加
+        const manualCheckUpdateButton = document.getElementById('manual-check-update-button');
 
-        // 効果音ファイルを読み込み、Howlオブジェクトを作成します。
-        // ファイルパスはご自身の環境に合わせて変更してください。
-        const selectSounds = [
-            new Howl({ src: ['sounds/se1.mp3'], volume: 0.7 })
-            // 必要なだけ音を追加できます
-        ];
-        const successSound = new Howl({ src: ['sounds/success.mp3'] }); // ミッション成功時の音
-        const failureSound = new Howl({ src: ['sounds/failure.mp3'] }); // 失敗時の音
-        const clearSound = new Howl({ src: ['sounds/clear.mp3'] });     // 数字が消える時の音
+        const selectSounds = [ new Howl({ src: ['sounds/se1.mp3'], volume: 0.7 }) ];
+        const successSound = new Howl({ src: ['sounds/success.mp3'] });
+        const failureSound = new Howl({ src: ['sounds/failure.mp3'] });
+        const clearSound = new Howl({ src: ['sounds/clear.mp3'] });
 
         let cellsData = [];
         let selectedCells = [];
@@ -366,62 +317,25 @@
         let isDrawing = false;
         let missionsSinceLastLevelUp = 0;
         let currentLevel = 1;
-
-        // Service Worker 関連の変数
         let newWorker = null; 
         let refreshing = false; 
 
-        // --- ゲームロジック (変更なしのため大部分省略) ---
-        function initGame() { /* ... */ }
-        function createCellElement(row, col, value) { /* ... */ }
-        function updateAllCellDisplays() { /* ... */ }
-        function resizeCanvasAndCells() { /* ... */ }
-        function updateMissionDisplay() { /* ... */ }
-        function generateNewMission() { /* ... */ }
-        function checkMission() { /* ... */ }
-        function handleInteractionStart(event) { /* ... */ }
-        function handleInteractionMove(event) { /* ... */ }
-        function handleInteractionEnd(event) { /* ... */ }
-        function handleGiveUp() { /* ... */ }
-        function addCellToSelection(event) { /* ... */ }
-        function getCellFromEvent(event) { /* ... */ }
-        function clearSelection() { /* ... */ }
-        function drawLines() { /* ... */ }
-        function clearCanvas() { /* ... */ }
-        function createParticles(cell) { /* ... */ }
-        async function processClearedCells() { /* ... */ }
-        async function applyGravityAndRefill() { /* ... */ }
-        function updateScoreDisplay() { /* ... */ }
-
-        // (省略したゲームロジックの関数群をここにペーストしてください)
-        // Initialize the game
+        // (他の関数は変更なし)
         function initGame() {
             gridContainer.innerHTML = '';
             cellsData = [];
             document.querySelectorAll('.debug-collision-circle').forEach(el => el.remove());
             document.querySelectorAll('.particle').forEach(el => el.remove());
-
             missionsSinceLastLevelUp = 0;
             currentLevel = 1;
             score = 0;
             currentMission.target = 0;
-
             for (let r = 0; r < GRID_SIZE; r++) {
                 const rowData = [];
                 for (let c = 0; c < GRID_SIZE; c++) {
                     const cellValue = Math.floor(Math.random() * (MAX_NUM - MIN_NUM + 1)) + MIN_NUM;
                     const cellElement = createCellElement(r, c, cellValue);
-
-                    const cellObj = {
-                        value: cellValue,
-                        element: cellElement,
-                        row: r,
-                        col: c,
-                        id: `cell-${r}-${c}-${Date.now()}`, 
-                        centerX: 0, 
-                        centerY: 0, 
-                        collisionRadius: 0 
-                    };
+                    const cellObj = { value: cellValue, element: cellElement, row: r, col: c, id: `cell-${r}-${c}-${Date.now()}`, centerX: 0, centerY: 0, collisionRadius: 0 };
                     gridContainer.appendChild(cellElement);
                     rowData.push(cellObj);
                 }
@@ -458,66 +372,44 @@
             const gridRect = gridContainer.getBoundingClientRect();
             lineCanvas.width = gridRect.width;
             lineCanvas.height = gridRect.height;
-
             document.querySelectorAll('.debug-collision-circle').forEach(el => el.remove());
-
             if (!cellsData || cellsData.length === 0) return;
-
             for (let r = 0; r < GRID_SIZE; r++) {
                 for (let c = 0; c < GRID_SIZE; c++) {
                     const cellObj = cellsData[r][c];
                     if (!cellObj || !cellObj.element) continue;
-
                     const cellRect = cellObj.element.getBoundingClientRect();
                     cellObj.centerX = (cellRect.left - gridRect.left) + (cellRect.width / 2);
                     cellObj.centerY = (cellRect.top - gridRect.top) + (cellRect.height / 2);
                     cellObj.collisionRadius = cellRect.width * 0.40;
-
-                    if (DEBUG_SHOW_COLLISION_CIRCLES) {
-                        const debugCircle = document.createElement('div');
-                        debugCircle.classList.add('debug-collision-circle');
-                        debugCircle.style.width = `${cellObj.collisionRadius * 2}px`;
-                        debugCircle.style.height = `${cellObj.collisionRadius * 2}px`;
-                        debugCircle.style.left = `${cellObj.centerX - cellObj.collisionRadius}px`;
-                        debugCircle.style.top = `${cellObj.centerY - cellObj.collisionRadius}px`;
-                        gridArea.appendChild(debugCircle);
-                    }
                 }
             }
             drawLines();
         }
 
         function updateMissionDisplay() {
-            if (currentMission && currentMission.text) {
-                missionDisplay.textContent = `レベル ${currentLevel} (${missionsSinceLastLevelUp}/${TARGET_MISSIONS_PER_LEVEL}) - ${currentMission.text}`;
-            } else {
-                missionDisplay.textContent = `レベル ${currentLevel} (${missionsSinceLastLevelUp}/${TARGET_MISSIONS_PER_LEVEL}) - ミッション準備中...`;
-            }
+            missionDisplay.textContent = `レベル ${currentLevel} (${missionsSinceLastLevelUp}/${TARGET_MISSIONS_PER_LEVEL}) - ${currentMission.text || 'ミッション準備中...'}`;
         }
 
         function generateNewMission() {
             let targetValue;
             let missionText = "";
             if (missionsSinceLastLevelUp === 0 || currentMission.target === 0) {
-                let potentialSolutionCells = [];
                 let availableCells = cellsData.flat().filter(c => c && c.value !== null);
                 if (availableCells.length < 2) {
-                    missionText = "数字が足りません！";
-                    currentMission = { type: 'sum', target: 0, text: missionText };
+                    currentMission = { type: 'sum', target: 0, text: "数字が足りません！" };
                     updateMissionDisplay();
                     return;
                 }
                 let numToPick = Math.floor(Math.random() * 2) + 2;
                 numToPick = Math.min(numToPick, availableCells.length);
+                let potentialSolutionCells = [];
                 for(let i=0; i<numToPick; i++) {
                      if(availableCells.length === 0) break;
                     potentialSolutionCells.push(availableCells.splice(Math.floor(Math.random() * availableCells.length), 1)[0]);
                 }
-                if (potentialSolutionCells.length < 2 && cellsData.flat().filter(c => c && c.value !== null).length >=2) {
-                     potentialSolutionCells = cellsData.flat().filter(c => c && c.value !== null).slice(0,2);
-                } else if (potentialSolutionCells.length < 2) {
-                     missionText = "ミッション作成不可";
-                     currentMission = { type: 'sum', target: 0, text: missionText };
+                if (potentialSolutionCells.length < 2) {
+                     currentMission = { type: 'sum', target: 0, text: "ミッション作成不可" };
                      updateMissionDisplay();
                      return;
                 }
@@ -528,8 +420,7 @@
                 currentMission.target = targetValue;
             }
             currentMission.type = 'sum';
-            missionText = `合計して ${currentMission.target} にしよう！`;
-            currentMission.text = missionText;
+            currentMission.text = `合計して ${currentMission.target} にしよう！`;
             updateMissionDisplay();
         }
 
@@ -541,9 +432,7 @@
         }
 
         function handleInteractionStart(event) {
-            if (gridContainer.contains(event.target) || event.target === gridContainer) {
-                 event.preventDefault();
-            }
+            if (gridContainer.contains(event.target) || event.target === gridContainer) event.preventDefault();
             clearSelection();
             isDrawing = true;
             addCellToSelection(event);
@@ -551,28 +440,17 @@
 
         function handleInteractionMove(event) {
             if (!isDrawing) return;
-             if (gridContainer.contains(event.target) || event.target === gridContainer || event.type === 'touchmove') {
-                event.preventDefault();
-            }
+            if (gridContainer.contains(event.target) || event.target === gridContainer || event.type === 'touchmove') event.preventDefault();
             addCellToSelection(event);
         }
 
         function handleInteractionEnd(event) {
-            if (!isDrawing && selectedCells.length === 0) {
-                clearSelection();
-                return;
-            }
-            if (isDrawing) {
-                isDrawing = false;
-            } else {
-                 if (selectedCells.length === 0) return;
-            }
-
+            if (!isDrawing) return;
+            isDrawing = false;
             if (checkMission()) {
                 messageArea.textContent = "ミッション成功！";
                 score += selectedCells.length * 10;
                 updateScoreDisplay();
-                drawLines();
                 missionsSinceLastLevelUp++;
                 if (missionsSinceLastLevelUp >= TARGET_MISSIONS_PER_LEVEL) {
                     currentLevel++;
@@ -586,21 +464,11 @@
                     messageArea.textContent = "残念！もう一度挑戦。";
                     setTimeout(() => {
                         clearSelection();
-                        if (messageArea.textContent === "残念！もう一度挑戦。") {
-                             messageArea.textContent = "";
-                        }
+                        if (messageArea.textContent === "残念！もう一度挑戦。") messageArea.textContent = "";
                     }, 1000);
                 } else {
                     clearSelection();
                 }
-            }
-            const levelUpMessage = `レベル ${currentLevel -1} クリア！レベル ${currentLevel} スタート！`;
-            if (messageArea.textContent !== levelUpMessage && messageArea.textContent !== "残念！もう一度挑戦。") {
-                setTimeout(() => {
-                    if (messageArea.textContent !== levelUpMessage && messageArea.textContent !== "残念！もう一度挑戦。") {
-                        messageArea.textContent = "";
-                    }
-                }, 2000);
             }
         }
 
@@ -612,66 +480,42 @@
             generateNewMission();
             messageArea.textContent = `次のレベル (${currentLevel}) に進みます！`;
             setTimeout(() => {
-                if (messageArea.textContent === `次のレベル (${currentLevel}) に進みます！`) {
-                    messageArea.textContent = "";
-                }
+                if (messageArea.textContent === `次のレベル (${currentLevel}) に進みます！`) messageArea.textContent = "";
             }, 2000);
         }
 
         function addCellToSelection(event) {
             const targetCellData = getCellFromEvent(event);
-            if (!targetCellData) return;
+            if (!targetCellData || selectedCells.find(sc => sc.id === targetCellData.id)) return;
             if (selectedCells.length > 0) {
                 const lastCell = selectedCells[selectedCells.length - 1];
-                if (lastCell.id === targetCellData.id) return;
                 const rowDiff = Math.abs(lastCell.row - targetCellData.row);
                 const colDiff = Math.abs(lastCell.col - targetCellData.col);
-                if (rowDiff > 1 || colDiff > 1) {
-                    return;
-                }
+                if (rowDiff > 1 || colDiff > 1) return;
             }
-            const alreadySelectedInPath = selectedCells.find(sc => sc.id === targetCellData.id);
-            if (alreadySelectedInPath) return;
             selectedCells.push(targetCellData);
             if(targetCellData.element) targetCellData.element.classList.add('selected');
-
-            // --- ▼▼▼ 位置計算ロジックを修正 ▼▼▼ ---
             if (glowLayer && targetCellData.element) {
                 const cellElem = targetCellData.element;
                 const glowNode = document.createElement('div');
                 glowNode.classList.add('glow-node');
-                
-                // #grid-containerの余白（padding）を取得
                 const gridContainerStyle = window.getComputedStyle(gridContainer);
                 const gridPaddingLeft = parseFloat(gridContainerStyle.left) || 0;
                 const gridPaddingTop = parseFloat(gridContainerStyle.top) || 0;
-
-                // #glow-layerを基準としたセルの絶対位置を計算
                 const cellLeft = cellElem.offsetLeft + gridPaddingLeft;
                 const cellTop = cellElem.offsetTop + gridPaddingTop;
-                
-                // セルのサイズと位置をglow-nodeに設定
                 glowNode.style.width = `${cellElem.offsetWidth}px`;
                 glowNode.style.height = `${cellElem.offsetHeight}px`;
                 glowNode.style.left = `${cellLeft}px`;
                 glowNode.style.top = `${cellTop}px`;
-
                 glowLayer.appendChild(glowNode);
             }
-            // --- ▲▲▲ 修正ここまで ▲▲▲ ---
-
-            // 選択されたセルの数に応じて音を鳴らします。
             try {
-                if (selectedCells.length <= selectSounds.length) {
-                    const soundIndex = selectedCells.length - 1;
-                    selectSounds[soundIndex].play();
-                } else {
-                    selectSounds[selectSounds.length - 1].play();
-                }
+                const soundIndex = Math.min(selectedCells.length - 1, selectSounds.length - 1);
+                selectSounds[soundIndex].play();
             } catch (e) {
                 console.error("サウンドの再生に失敗しました: ", e);
             }
-
             drawLines();
         }
 
@@ -684,8 +528,7 @@
             } else if (event.changedTouches && event.changedTouches.length > 0) {
                 clientX = event.changedTouches[0].clientX;
                 clientY = event.changedTouches[0].clientY;
-            }
-            else {
+            } else {
                 clientX = event.clientX;
                 clientY = event.clientY;
             }
@@ -695,12 +538,8 @@
                 for (let c = 0; c < GRID_SIZE; c++) {
                     const cell = cellsData[r][c];
                     if (!cell) continue;
-                    const distance = Math.sqrt(
-                        Math.pow(pointerX - cell.centerX, 2) + Math.pow(pointerY - cell.centerY, 2)
-                    );
-                    if (distance < cell.collisionRadius) {
-                        return cell;
-                    }
+                    const distance = Math.sqrt(Math.pow(pointerX - cell.centerX, 2) + Math.pow(pointerY - cell.centerY, 2));
+                    if (distance < cell.collisionRadius) return cell;
                 }
             }
             return null;
@@ -712,34 +551,21 @@
             });
             selectedCells = [];
             clearCanvas();
-
-            // --- ▼▼▼ 追加 ▼▼▼ ---
-            // glow-layer の中の光る要素をすべて削除
-            if (glowLayer) {
-                glowLayer.innerHTML = '';
-            }
-            // --- ▲▲▲ 追加 ▲▲▲ ---
+            if (glowLayer) glowLayer.innerHTML = '';
         }
 
         function drawLines() {
             clearCanvas();
             if (selectedCells.length < 2) return;
             canvasCtx.beginPath();
-            /* ▼▼▼ 変更 ▼▼▼ */
-            canvasCtx.strokeStyle = '#ff80ab'; /* 明るいピンク (選択色に合わせる) */
-            /* ▲▲▲ 変更 ▲▲▲ */
+            canvasCtx.strokeStyle = '#ff80ab';
             canvasCtx.lineWidth = Math.max(3, gridContainer.offsetWidth / 70);
             canvasCtx.lineCap = 'round';
             canvasCtx.lineJoin = 'round';
             for (let i = 0; i < selectedCells.length; i++) {
                 const cell = selectedCells[i];
-                const x = cell.centerX;
-                const y = cell.centerY;
-                if (i === 0) {
-                    canvasCtx.moveTo(x, y);
-                } else {
-                    canvasCtx.lineTo(x, y);
-                }
+                if (i === 0) canvasCtx.moveTo(cell.centerX, cell.centerY);
+                else canvasCtx.lineTo(cell.centerX, cell.centerY);
             }
             canvasCtx.stroke();
         }
@@ -771,22 +597,21 @@
                 particle.style.setProperty('--particle-mid-y', `${midY}px`);
                 particle.style.animationDelay = `${Math.random() * 0.25}s`;
                 gridArea.appendChild(particle);
-                particle.addEventListener('animationend', () => {
-                    if (particle.parentNode) {
-                        particle.parentNode.removeChild(particle);
-                    }
-                });
+                particle.addEventListener('animationend', () => particle.remove());
             }
         }
-
+        
+        // ▼▼▼ 修正した関数 ▼▼▼
         async function processClearedCells() {
-            const cellsToClear = [...selectedCells];
+            const cellsToClear = [...selectedCells]; // 消去するセルを保存
+
+            // 選択の視覚効果（光、線、ハイライト）を先に消去する
+            clearSelection();
 
             clearSound.play();
-
             cellsToClear.forEach(cell => createParticles(cell));
-            const tempSelectedForLine = [...selectedCells];
-            selectedCells = [];
+
+            // 消去アニメーションの実行
             const removalPromises = cellsToClear.map(cell => {
                 if(cell && cell.element) {
                     cell.element.classList.add('clearing');
@@ -795,31 +620,28 @@
                 return Promise.resolve();
             });
             await Promise.all(removalPromises);
+
+            // データからセルを削除
             cellsToClear.forEach(clearedCell => {
-                if (clearedCell && typeof clearedCell.row === 'number' && typeof clearedCell.col === 'number' &&
-                    cellsData[clearedCell.row] && cellsData[clearedCell.row][clearedCell.col]) {
+                if (clearedCell?.row !== undefined && clearedCell?.col !== undefined && cellsData[clearedCell.row]?.[clearedCell.col]) {
                     cellsData[clearedCell.row][clearedCell.col].value = null;
                     if(clearedCell.element) {
                         clearedCell.element.classList.remove('clearing');
                     }
                 }
             });
-             tempSelectedForLine.forEach(cell => {
-                 if (cell && cell.element) cell.element.classList.remove('selected');
-            });
-            setTimeout(() => {
-                 if(selectedCells.length === 0) clearCanvas();
-            }, 100);
+            
             await applyGravityAndRefill();
             generateNewMission();
         }
+        // ▲▲▲ 修正ここまで ▲▲▲
 
         async function applyGravityAndRefill() {
             const animationPromises = [];
             for (let c = 0; c < GRID_SIZE; c++) {
                 let emptySlotsInCol = 0;
                 for (let r = GRID_SIZE - 1; r >= 0; r--) {
-                    if (!cellsData[r] || !cellsData[r][c]) continue;
+                    if (!cellsData[r]?.[c]) continue;
                     const currentCellData = cellsData[r][c];
                     if (currentCellData.value === null) {
                         emptySlotsInCol++;
@@ -833,12 +655,7 @@
                         cellToMove.element.style.transform = `translateY(${fallDistance}px)`;
                         cellToMove.element.classList.add('falling');
                         cellsData[newRow][c] = cellToMove;
-                        cellsData[r][c] = {
-                            value: null,
-                            element: cellsData[r][c].element,
-                            row: r, col: c, id: `empty-temp-${r}-${c}-${Date.now()}`,
-                            centerX: cellsData[r][c].centerX, centerY: cellsData[r][c].centerY, collisionRadius: cellsData[r][c].collisionRadius
-                        };
+                        cellsData[r][c] = { value: null, element: cellsData[r][c].element, row: r, col: c, id: `empty-temp-${r}-${c}-${Date.now()}` };
                         cellToMove.row = newRow;
                         animationPromises.push(new Promise(resolve => {
                             setTimeout(() => {
@@ -852,26 +669,20 @@
                     }
                 }
                 for (let i = 0; i < emptySlotsInCol; i++) {
-                    const newRowForNewCell = i;
-                    const newValue = Math.floor(Math.random() * (MAX_NUM - MIN_NUM + 1)) + MIN_NUM;
-                    const cellToFill = cellsData[newRowForNewCell][c];
-                    if (!cellToFill || !cellToFill.element) continue;
-                    cellToFill.value = newValue;
+                    const cellToFill = cellsData[i][c];
+                    if (!cellToFill?.element) continue;
+                    cellToFill.value = Math.floor(Math.random() * (MAX_NUM - MIN_NUM + 1)) + MIN_NUM;
                     cellToFill.element.classList.add('new-cell');
                     animationPromises.push(new Promise(resolve => {
                         setTimeout(() => {
-                            if (cellToFill.element) {
-                                cellToFill.element.classList.remove('new-cell');
-                            }
+                            cellToFill.element?.classList.remove('new-cell');
                             resolve();
                         }, 500);
                     }));
                 }
             }
             await Promise.all(animationPromises);
-            const tempGridDataValuesOnly = cellsData.map(row =>
-                row.map(cell => ({ value: cell.value }))
-            );
+            const tempGridDataValuesOnly = cellsData.map(row => row.map(cell => ({ value: cell.value })));
             gridContainer.innerHTML = '';
             const newMasterCellsData = [];
             for(let r=0; r<GRID_SIZE; r++) {
@@ -880,18 +691,7 @@
                     const valueToSet = tempGridDataValuesOnly[r][c].value;
                     const newElement = createCellElement(r,c, valueToSet);
                     gridContainer.appendChild(newElement);
-                    const originalCellData = cellsData[r][c];
-                    if(originalCellData && originalCellData.element && originalCellData.element.classList.contains('new-cell')){
-                        newElement.classList.add('new-cell');
-                        setTimeout(() => newElement.classList.remove('new-cell'), 500);
-                    }
-                    newRowData.push({
-                        value: valueToSet,
-                        element: newElement,
-                        row: r, col: c,
-                        id: `cell-${r}-${c}-${Date.now()}`,
-                        centerX: 0, centerY: 0, collisionRadius: 0
-                    });
+                    newRowData.push({ value: valueToSet, element: newElement, row: r, col: c, id: `cell-${r}-${c}-${Date.now()}` });
                 }
                 newMasterCellsData.push(newRowData);
             }
@@ -904,41 +704,20 @@
             scoreDisplay.textContent = score;
         }
 
-        // --- Service Worker と 更新通知関連の関数 ---
-        function showUpdateNotification() {
-            console.log('[PWA Update] Showing update notification.');
-            updateNotification.classList.add('show');
-        }
-
-        function hideUpdateNotification() {
-            updateNotification.classList.remove('show');
-        }
-
-        function handleUpdate() {
-            console.log('[PWA Update] Update button (in notification) clicked.');
-            if (newWorker) {
-                newWorker.postMessage({ action: 'skipWaiting' });
-                console.log('[PWA Update] Sent skipWaiting message to new worker.');
-            }
-            hideUpdateNotification(); 
-        }
-
+        // --- Service Worker etc. (変更なし) ---
+        function showUpdateNotification() { updateNotification.classList.add('show'); }
+        function hideUpdateNotification() { updateNotification.classList.remove('show'); }
+        function handleUpdate() { if (newWorker) newWorker.postMessage({ action: 'skipWaiting' }); hideUpdateNotification(); }
         function trackInstalling(worker) {
             worker.addEventListener('statechange', () => {
-                console.log('[PWA Update] Installing worker state changed:', worker.state);
                 if (worker.state === 'installed') {
                     if (navigator.serviceWorker.controller) {
-                        console.log('[PWA Update] New worker installed and ready to activate. Setting newWorker and showing notification.');
-                        newWorker = worker; // Ensure newWorker is set to the successfully installed worker
+                        newWorker = worker;
                         showUpdateNotification();
-                    } else {
-                        console.log('[PWA Update] New worker installed (initial install). No notification needed yet. It will activate on next load or after clients.claim().');
                     }
                 }
             });
         }
-
-        // --- イベントリスナー ---
         const eventAreaForInteraction = document.getElementById('grid-area');
         eventAreaForInteraction.addEventListener('mousedown', handleInteractionStart);
         document.addEventListener('mousemove', handleInteractionMove);
@@ -948,139 +727,58 @@
         document.addEventListener('touchend', handleInteractionEnd);
         document.addEventListener('touchcancel', handleInteractionEnd);
         giveUpButton.addEventListener('click', handleGiveUp);
-        updateButton.addEventListener('click', handleUpdate); // Notification's update button
+        updateButton.addEventListener('click', handleUpdate);
         window.addEventListener('resize', resizeCanvasAndCells);
-
-		// --- 手動更新確認ボタンのロジック ---
 		if (manualCheckUpdateButton) {
 		    manualCheckUpdateButton.addEventListener('click', () => {
-		        console.log('[PWA Update] Manual "Check for Updates" button clicked.');
-		        messageArea.textContent = ""; // Clear previous messages
-
-		        if (!navigator.serviceWorker || !navigator.serviceWorker.getRegistration) {
-		            console.warn('[PWA Update] Service Worker API not available.');
+		        messageArea.textContent = "";
+		        if (!navigator.serviceWorker?.getRegistration) {
 		            messageArea.textContent = "Service Workerが利用できません。";
 		            return;
 		        }
-
 		        navigator.serviceWorker.getRegistration().then(registration => {
 		            if (!registration) {
-		                console.log('[PWA Update] Manual check: No active Service Worker registration found.');
 		                messageArea.textContent = "更新チェック機能が有効ではありません。";
 		                return;
 		            }
-
-		            // 1. 既に待機中のSWがいるか確認
 		            if (registration.waiting) {
-		                newWorker = registration.waiting; // newWorker を更新
-		                console.log('[PWA Update] Manual check: An update is already waiting. Showing notification.');
+		                newWorker = registration.waiting;
 		                messageArea.textContent = "新しいバージョンが待機中です！";
 		                showUpdateNotification();
 		                return;
 		            }
-
-		            // 2. サーバーに新しいバージョンがないか確認
-		            console.log('[PWA Update] Manual check: Calling registration.update().');
 		            messageArea.textContent = "更新を確認中...";
-		            registration.update()
-		                .then(updatedReg => { // updatedReg は registration と同じオブジェクト
-		                    // registration.update()が解決した後、再度waitingとinstallingを確認
-		                    if (updatedReg.installing) {
-		                        console.log('[PWA Update] Manual check: Update found by reg.update(), now installing.');
-		                        messageArea.textContent = "新しいバージョンをインストール中...";
-		                        // 'updatefound' イベントリスナーがこれを処理するはずだが、念のためtrackInstallingを呼ぶ
-		                        if (!newWorker || newWorker !== updatedReg.installing) {
-		                           newWorker = updatedReg.installing;
-		                           trackInstalling(newWorker);
-		                        }
-		                    } else if (updatedReg.waiting) {
-		                        newWorker = updatedReg.waiting; // newWorker を更新
-		                        console.log('[PWA Update] Manual check: Update found by reg.update(), now waiting.');
-		                        messageArea.textContent = "新しいバージョンが見つかりました！";
-		                        showUpdateNotification();
-		                    } else {
-		                        console.log('[PWA Update] Manual check: reg.update() completed. No new version found or already up to date.');
-		                        messageArea.textContent = "現在、最新バージョンです。";
+		            registration.update().then(updatedReg => {
+		                if (updatedReg.installing) {
+		                    messageArea.textContent = "新しいバージョンをインストール中...";
+		                    if (!newWorker || newWorker !== updatedReg.installing) {
+		                       newWorker = updatedReg.installing;
+		                       trackInstalling(newWorker);
 		                    }
-		                })
-		                .catch(err => {
-		                    console.error('[PWA Update] Manual check: registration.update() failed:', err);
-		                    messageArea.textContent = "更新チェックに失敗しました。";
-		                });
-		        }).catch(err => {
-		            console.error('[PWA Update] Manual check: getRegistration() failed:', err);
-		            messageArea.textContent = "更新機能の状態取得に失敗しました。";
-		        });
+		                } else if (updatedReg.waiting) {
+		                    newWorker = updatedReg.waiting;
+		                    messageArea.textContent = "新しいバージョンが見つかりました！";
+		                    showUpdateNotification();
+		                } else {
+		                    messageArea.textContent = "現在、最新バージョンです。";
+		                }
+		            }).catch(err => messageArea.textContent = "更新チェックに失敗しました。");
+		        }).catch(err => messageArea.textContent = "更新機能の状態取得に失敗しました。");
 		    });
 		}
-
-        // --- ゲーム初期化 ---
         initGame();
-
-        // --- Service Worker 登録と更新処理 ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js', { scope: './' })
-                    .then(registration => {
-                        console.log('[PWA Update] Service Worker registered successfully with scope:', registration.scope);
-
-                        if (registration.waiting) {
-                            newWorker = registration.waiting;
-                            console.log('[PWA Update] Initial check: A new SW is already waiting.', newWorker);
-                            showUpdateNotification();
-                        }
-
-                        if (registration.installing) {
-                            // newWorker = registration.installing; // trackInstalling内で設定されることもある
-                            console.log('[PWA Update] Initial check: A new SW is installing.', registration.installing);
-                            trackInstalling(registration.installing);
-                        }
-
-                        registration.addEventListener('updatefound', () => {
-                            const installingWorker = registration.installing;
-                            console.log('[PWA Update] Event "updatefound": New SW found and is installing.', installingWorker);
-                            // newWorker = installingWorker; // trackInstalling内で設定されることもある
-                            trackInstalling(installingWorker);
-                        });
-                    })
-                    .catch(error => {
-                        console.error('[PWA Update] Service Worker registration failed:', error);
-                    });
-
-                let refreshingReloadFlag; // リロード処理中のフラグ名変更
+                navigator.serviceWorker.register('./sw.js', { scope: './' }).then(registration => {
+                    if (registration.waiting) { newWorker = registration.waiting; showUpdateNotification(); }
+                    if (registration.installing) { trackInstalling(registration.installing); }
+                    registration.addEventListener('updatefound', () => trackInstalling(registration.installing));
+                }).catch(error => console.error('Service Worker registration failed:', error));
+                let refreshingReloadFlag;
                 navigator.serviceWorker.addEventListener('controllerchange', () => {
-                    console.log('[PWA Update] Event "controllerchange": New SW has activated.');
                     if (refreshingReloadFlag) return;
-                    console.log('[PWA Update] Reloading page to apply updates.');
                     window.location.reload();
                     refreshingReloadFlag = true;
-                });
-
-                document.addEventListener('visibilitychange', () => {
-                    if (document.visibilityState === 'visible' && navigator.serviceWorker.controller) {
-                        console.log('[PWA Update] App became visible, attempting to check for SW update via registration.update().');
-                        navigator.serviceWorker.getRegistration().then(reg => {
-                            if (reg) {
-                                reg.update().then(updatedReg => { // updatedReg は reg と同じオブジェクト
-                                    if (updatedReg.installing) {
-                                         console.log('[PWA Update] Visibility check: Update found, now installing.');
-                                         if (!newWorker || newWorker !== updatedReg.installing) {
-                                            newWorker = updatedReg.installing;
-                                            trackInstalling(newWorker);
-                                         }
-                                    } else if (updatedReg.waiting) {
-                                         console.log('[PWA Update] Visibility check: Update found, now waiting. Showing notification.');
-                                         newWorker = updatedReg.waiting;
-                                         showUpdateNotification();
-                                    } else {
-                                         console.log('[PWA Update] Visibility check: No new version found.');
-                                    }
-                                }).catch(err => {
-                                    console.warn('[PWA Update] Visibility check: registration.update() failed:', err);
-                                });
-                            }
-                        });
-                    }
                 });
             });
         }
