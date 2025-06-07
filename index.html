@@ -10,103 +10,130 @@
     <meta name="apple-mobile-web-app-title" content="SimpleNumConnect">
     <link rel="apple-touch-icon" href="icons/icon-180x180.png">
     <style>
-        /* スタイルは変更なしのため省略 */
+        /* --- 全体レイアウト --- */
         body {
             font-family: 'Inter', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #1a202c; /* Tailwind gray-900 */
-            color: #e2e8f0; /* Tailwind gray-300 */
+            background-color: #1a202c;
+            color: #e2e8f0;
             margin: 0;
             overflow: hidden;
-            touch-action: none; /* Prevent default touch actions like pull-to-refresh */
+            touch-action: none;
         }
+
         #game-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #2d3748; /* Tailwind gray-800 */
+            background-color: #2d3748;
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 10px 20px rgba(0,0,0,0.3);
             width: 100%;
-            max-width: 400px; /* Max width of the game container */
+            max-width: 400px;
             box-sizing: border-box;
-            position: relative; /* Added for version display positioning */
-        }
-        #mission-display {
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-bottom: 12px;
-            text-align: center;
-            color: #90cdf4; /* Tailwind blue-400 */
-            min-height: 3em;
-        }
-        #score-display {
-            font-size: 1rem;
-            margin-bottom: 12px;
-        }
-        #grid-area {
             position: relative;
-            width: calc(100% - 10px); /* Adjust for padding/border */
-            max-width: 320px; /* Max size for the grid itself */
-            aspect-ratio: 1 / 1; /* Make it square */
-            margin-bottom: 15px;
-            overflow: hidden; /* Prevent particles from showing outside */
         }
-        #grid-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr); /* GRID_SIZE will be 4 */
-            grid-template-rows: repeat(4, 1fr);   /* GRID_SIZE will be 4 */
-            gap: 8px;
+
+        /* --- ゲーム盤のレイアウト --- */
+        #game-board {
+            position: relative;
+            /* 数字の表示領域(320px) + 左右の余白(25px * 2) = 370px */
+            width: 100%;
+            max-width: 370px;
+            aspect-ratio: 1 / 1;
+            margin: 0 auto 15px auto;
+        }
+
+        /* 光るエフェクトを描画する専用の層 */
+        #glow-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            position: relative;
+            pointer-events: none;
             z-index: 1;
+        }
+
+        /* パーティクルと線のコンテナ（はみ出しをクリップする） */
+        #grid-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* ★重要：はみ出しを隠す役割 */
+        }
+
+        /* 数字のグリッド本体 */
+        #grid-container {
+            position: absolute;
+            /* #game-board(370px) の中に、上下左右25pxの余白を空けて配置 */
+            top: 25px;
+            left: 25px;
+            right: 25px;
+            bottom: 25px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 8px;
+            z-index: 2; /* line-canvasより手前 */
             user-select: none;
             -webkit-user-select: none;
             -ms-user-select: none;
         }
+
+        /* --- セルとエフェクト --- */
         .cell {
-            background-color: #4a5568; /* Tailwind gray-600 */
+            background-color: #4a5568;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 1.75rem;
             font-weight: bold;
-            color: #edf2f7; /* Tailwind gray-200 */
+            color: #edf2f7;
             cursor: pointer;
             transition: transform 0.2s ease, background-color 0.2s ease, opacity 0.3s ease;
             position: relative;
             aspect-ratio: 1 / 1;
         }
+
         .cell.selected {
-            background-color: #63b3ed; /* Tailwind blue-400 */
-            transform: scale(1.15); /* Slightly larger selection indication */
+            background-color: #63b3ed;
+            transform: scale(1.15);
             color: #1a202c;
-            box-shadow: 0 0 15px #63b3ed, 0 0 25px #63b3ed; /* Glow effect */
         }
+
+        .glow-node {
+            position: absolute;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #63b3ed, 0 0 25px #63b3ed;
+            transition: opacity 0.2s;
+        }
+
+        #line-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3; /* グリッドより手前 */
+        }
+
+        /* --- クリア時のアニメーション --- */
         .cell.clearing {
             animation: cellClearEffect 0.6s forwards ease-out;
         }
         @keyframes cellClearEffect {
-            0% {
-                opacity: 1;
-                transform: scale(1.1) rotate(0deg);
-                background-color: #fbd38d;
-            }
-            50% {
-                transform: scale(1.3) rotate(180deg);
-                opacity: 0.7;
-            }
-            100% {
-                opacity: 0;
-                transform: scale(0.3) rotate(360deg);
-                background-color: #fbd38d;
-            }
+            0% { opacity: 1; transform: scale(1.1) rotate(0deg); background-color: #fbd38d; }
+            50% { transform: scale(1.3) rotate(180deg); opacity: 0.7; }
+            100% { opacity: 0; transform: scale(0.3) rotate(360deg); background-color: #fbd38d; }
         }
         .cell.falling {
             transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -117,75 +144,55 @@
             animation: newCellAppear 0.5s forwards cubic-bezier(0.4, 0, 0.2, 1);
         }
         @keyframes newCellAppear {
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-        .debug-collision-circle {
-            position: absolute;
-            border: 1px dashed rgba(255, 0, 0, 0.5);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 3;
-            box-sizing: border-box;
-        }
-        #line-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 2;
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* Particle styles */
+        /* --- パーティクル --- */
         .particle {
             position: absolute;
-            width: 12px; /* Increased size */
-            height: 12px; /* Increased size */
-            background-color: #fbd38d; /* Tailwind orange-300 */
+            width: 12px;
+            height: 12px;
+            background-color: #fbd38d;
             border-radius: 50%;
             pointer-events: none;
-            z-index: 4; /* Above cells and lines */
+            z-index: 4;
             opacity: 1;
-            animation: particle-effect 0.8s forwards ease-out; /* Slightly longer animation */
+            animation: particle-effect 0.8s forwards ease-out;
         }
-
         @keyframes particle-effect {
-            0% {
-                transform: translate(0, 0) scale(1) rotate(0deg);
-                opacity: 1;
-                background-color: #fee2b3; /* Lighter orange */
-            }
-            50% {
-                transform: translate(var(--particle-mid-x), var(--particle-mid-y)) scale(1.5) rotate(180deg);
-                opacity: 0.8;
-                background-color: #f6ad55; /* Darker orange */
-            }
-            100% {
-                transform: translate(var(--particle-x), var(--particle-y)) scale(0) rotate(360deg);
-                opacity: 0;
-                background-color: #fbd38d;
-            }
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; background-color: #fee2b3; }
+            50% { transform: translate(var(--particle-mid-x), var(--particle-mid-y)) scale(1.5) rotate(180deg); opacity: 0.8; background-color: #f6ad55; }
+            100% { transform: translate(var(--particle-x), var(--particle-y)) scale(0) rotate(360deg); opacity: 0; }
         }
 
+        /* --- UI要素 --- */
+        #mission-display {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+            text-align: center;
+            color: #90cdf4;
+            min-height: 3em;
+        }
+        #score-display {
+            font-size: 1rem;
+            margin-bottom: 12px;
+        }
         #message-area {
             min-height: 1.5em;
             margin-top: 10px;
             font-weight: bold;
-            color: #68d391; /* Tailwind green-400 */
+            color: #68d391;
         }
         #controls-area {
             display: flex;
-            flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
-            justify-content: center; /* Center buttons */
+            flex-wrap: wrap;
+            justify-content: center;
             gap: 10px;
             margin-top: 10px;
         }
         .action-button {
-            background-color: #4299e1; /* Tailwind blue-500 */
+            background-color: #4299e1;
             color: white;
             padding: 10px 15px;
             border: none;
@@ -195,24 +202,23 @@
             transition: background-color 0.2s;
         }
         .action-button:hover {
-            background-color: #3182ce; /* Tailwind blue-600 */
+            background-color: #3182ce;
         }
-
         #version-display {
             position: absolute;
             bottom: 5px;
             left: 10px;
             font-size: 0.75rem;
-            color: #a0aec0; /* Tailwind gray-500 */
+            color: #a0aec0;
         }
 
-        /* Update notification styles */
+        /* --- 更新通知 --- */
         #update-notification {
             position: fixed;
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: #38a169; /* Tailwind green-600 */
+            background-color: #38a169;
             color: white;
             padding: 10px 20px;
             border-radius: 8px;
@@ -221,23 +227,14 @@
             display: none;
             text-align: center;
         }
-
         #update-notification.show {
             display: block;
             animation: slideDown 0.3s ease-out;
         }
-
         @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
-
         #update-button {
             background-color: #2d3748;
             color: white;
@@ -248,38 +245,18 @@
             cursor: pointer;
             font-size: 0.8rem;
         }
-
         #update-button:hover {
             background-color: #1a202c;
         }
 
+        /* --- レスポンシブ対応 --- */
         @media (max-width: 360px) {
-            .cell {
-                font-size: 1.25rem;
-            }
-            #mission-display {
-                font-size: 0.9rem;
-            }
-             .action-button {
-                padding: 8px 12px;
-                font-size: 0.8rem;
-            }
-            .particle {
-                width: 8px; /* Adjusted for smaller screens */
-                height: 8px;
-            }
-            #version-display {
-                font-size: 0.65rem;
-                left: 5px;
-            }
-            #update-notification {
-                width: calc(100% - 20px);
-                top: 10px;
-                left: 10px;
-                right: 10px;
-                transform: none;
-                font-size: 0.8rem;
-            }
+            .cell { font-size: 1.25rem; }
+            #mission-display { font-size: 0.9rem; }
+            .action-button { padding: 8px 12px; font-size: 0.8rem; }
+            .particle { width: 8px; height: 8px; }
+            #version-display { font-size: 0.65rem; left: 5px; }
+            #update-notification { width: calc(100% - 20px); top: 10px; left: 10px; right: 10px; transform: none; font-size: 0.8rem; }
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
@@ -293,15 +270,18 @@
     <div id="game-container">
         <div id="mission-display">ミッションを読み込み中...</div>
         <div id="score-display">スコア: <span id="score">0</span></div>
-        <div id="grid-area">
-            <canvas id="line-canvas"></canvas>
-            <div id="grid-container"></div>
+        <div id="game-board">
+            <div id="glow-layer"></div>
+            <div id="grid-area">
+                <canvas id="line-canvas"></canvas>
+                <div id="grid-container"></div>
+            </div>
         </div>
         <div id="message-area"></div>
         <div id="controls-area">
             <button id="give-up-button" class="action-button">ギブアップ</button>
             <button id="manual-check-update-button" class="action-button">更新を確認</button> </div>
-        <div id="version-display">ver 1.14</div> </div>
+        <div id="version-display">ver 1.15</div> </div>
 
     <script>
         // --- 定数とグローバル変数 ---
@@ -321,6 +301,7 @@
         const messageArea = document.getElementById('message-area');
         const giveUpButton = document.getElementById('give-up-button');
         const gridArea = document.getElementById('grid-area');
+        const glowLayer = document.getElementById('glow-layer');
         const updateNotification = document.getElementById('update-notification');
         const updateButton = document.getElementById('update-button');
         const manualCheckUpdateButton = document.getElementById('manual-check-update-button'); // 追加
@@ -611,19 +592,40 @@
             selectedCells.push(targetCellData);
             if(targetCellData.element) targetCellData.element.classList.add('selected');
 
+            // --- ▼▼▼ 位置計算ロジックを修正 ▼▼▼ ---
+            if (glowLayer && targetCellData.element) {
+                const cellElem = targetCellData.element;
+                const glowNode = document.createElement('div');
+                glowNode.classList.add('glow-node');
+                
+                // #grid-containerの余白（padding）を取得
+                const gridContainerStyle = window.getComputedStyle(gridContainer);
+                const gridPaddingLeft = parseFloat(gridContainerStyle.left) || 0;
+                const gridPaddingTop = parseFloat(gridContainerStyle.top) || 0;
+
+                // #glow-layerを基準としたセルの絶対位置を計算
+                const cellLeft = cellElem.offsetLeft + gridPaddingLeft;
+                const cellTop = cellElem.offsetTop + gridPaddingTop;
+                
+                // セルのサイズと位置をglow-nodeに設定
+                glowNode.style.width = `${cellElem.offsetWidth}px`;
+                glowNode.style.height = `${cellElem.offsetHeight}px`;
+                glowNode.style.left = `${cellLeft}px`;
+                glowNode.style.top = `${cellTop}px`;
+
+                glowLayer.appendChild(glowNode);
+            }
+            // --- ▲▲▲ 修正ここまで ▲▲▲ ---
+
             // 選択されたセルの数に応じて音を鳴らします。
             try {
-                // 選択されたセルの数が、用意した音の数より少ない場合
                 if (selectedCells.length <= selectSounds.length) {
-                    // 配列のインデックスは0から始まるので、-1 します
                     const soundIndex = selectedCells.length - 1;
                     selectSounds[soundIndex].play();
                 } else {
-                    // 用意した音の数を超えて選択された場合は、最後の音を鳴らします
                     selectSounds[selectSounds.length - 1].play();
                 }
             } catch (e) {
-                // 音声ファイルの読み込み失敗などでエラーが出てもゲームが止まらないように
                 console.error("サウンドの再生に失敗しました: ", e);
             }
 
@@ -667,6 +669,13 @@
             });
             selectedCells = [];
             clearCanvas();
+
+            // --- ▼▼▼ 追加 ▼▼▼ ---
+            // glow-layer の中の光る要素をすべて削除
+            if (glowLayer) {
+                glowLayer.innerHTML = '';
+            }
+            // --- ▲▲▲ 追加 ▲▲▲ ---
         }
 
         function drawLines() {
