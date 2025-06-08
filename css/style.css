@@ -91,23 +91,17 @@ body {
 }
 
 .cell.selected {
-    background-color: #ff80ab; /* 明るいピンク */
-    color: #ffffff; /* ホワイト */
+    background-color: #ff80ab;
+    color: #ffffff;
     transform: scale(1.15);
 }
+
 
 .cell.failed {
     background-color: #bdbdbd; /* グレー */
     color: #ffffff;
     transform: scale(1.0);
     transition: background-color 0.2s ease, transform 0.2s ease;
-}
-
-.glow-node {
-    position: absolute;
-    border-radius: 50%;
-    box-shadow: 0 0 15px #ff80ab, 0 0 25px #ff80ab;
-    transition: opacity 0.2s;
 }
 
 #line-canvas {
@@ -117,7 +111,9 @@ body {
     right: 25px;
     bottom: 25px;
     pointer-events: none;
+    /* z-indexを1にして、セルの背景に描画されるようにする */
     z-index: 1; 
+    /* フィルタは使用しない */
 }
 
 /* --- クリア時のアニメーション --- */

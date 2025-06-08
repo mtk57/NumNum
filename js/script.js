@@ -4,6 +4,7 @@ let selectedCells = [];
 let currentMission = { type: 'sum', target: 0, text: "" };
 let score = 0;
 let isDrawing = false;
+let isAnimating = false;
 let missionsSinceLastLevelUp = 0;
 let currentLevel = 1;
 // PWAハンドラからも参照されるグローバル変数
@@ -60,6 +61,7 @@ function resizeCanvasAndCells() {
     const gridRect = gridContainer.getBoundingClientRect();
     lineCanvas.width = gridRect.width;
     lineCanvas.height = gridRect.height;
+    
     if (!cellsData || cellsData.length === 0) return;
     for (let r = 0; r < GRID_SIZE; r++) {
         for (let c = 0; c < GRID_SIZE; c++) {
@@ -111,12 +113,12 @@ function generateNewMission() {
 
 function checkMission() {
     if (selectedCells.length < 2) return false;
-    // Number() を使って、各セルの値を確実に「数値」として合計する
     const result = selectedCells.reduce((acc, cell) => acc + Number(cell.value), 0);
     return result === currentMission.target;
 }
 
 function handleInteractionStart(event) {
+    if (isAnimating) return; 
     if (gridContainer.contains(event.target) || event.target === gridContainer) event.preventDefault();
     clearSelection();
     isDrawing = true;
@@ -124,7 +126,7 @@ function handleInteractionStart(event) {
 }
 
 function handleInteractionMove(event) {
-    if (!isDrawing) return;
+    if (!isDrawing || isAnimating) return;
     if (gridContainer.contains(event.target) || event.target === gridContainer || event.type === 'touchmove') event.preventDefault();
     addCellToSelection(event);
 }
@@ -148,15 +150,10 @@ function handleInteractionEnd(event) {
         if (selectedCells.length > 0) {
             failureSound.play();
             const failedCells = [...selectedCells];
-
             clearSelection();
-
             failedCells.forEach(cell => {
-                if (cell.element) {
-                    cell.element.classList.add('failed');
-                }
+                if (cell.element) cell.element.classList.add('failed');
             });
-
             setTimeout(() => {
                 failedCells.forEach(cell => {
                     cell.element?.classList.remove('failed');
@@ -164,9 +161,13 @@ function handleInteractionEnd(event) {
             }, 500);
         }
     }
+    if (!checkMission()) {
+        clearCanvas();
+    }
 }
 
 function handleGiveUp() {
+    if (isAnimating) return;
     clearSelection();
     currentLevel++;
     missionsSinceLastLevelUp = 0;
@@ -187,19 +188,7 @@ function addCellToSelection(event) {
     }
     selectedCells.push(targetCellData);
     if(targetCellData.element) targetCellData.element.classList.add('selected');
-    if (glowLayer && targetCellData.element) {
-        const cellElem = targetCellData.element;
-        const glowNode = document.createElement('div');
-        glowNode.classList.add('glow-node');
-        const gridContainerStyle = window.getComputedStyle(gridContainer);
-        const gridPaddingLeft = parseFloat(gridContainerStyle.left) || 0;
-        const gridPaddingTop = parseFloat(gridContainerStyle.top) || 0;
-        glowNode.style.width = `${cellElem.offsetWidth}px`;
-        glowNode.style.height = `${cellElem.offsetHeight}px`;
-        glowNode.style.left = `${cellElem.offsetLeft + gridPaddingLeft}px`;
-        glowNode.style.top = `${cellElem.offsetTop + gridPaddingTop}px`;
-        glowLayer.appendChild(glowNode);
-    }
+    
     try {
         selectSounds[Math.min(selectedCells.length - 1, selectSounds.length - 1)].play();
     } catch (e) {
@@ -237,17 +226,22 @@ function clearSelection() {
     selectedCells.forEach(cell => cell.element?.classList.remove('selected'));
     selectedCells = [];
     clearCanvas();
-    if (glowLayer) glowLayer.innerHTML = '';
 }
 
 function drawLines() {
     clearCanvas();
     if (selectedCells.length < 2) return;
-    canvasCtx.beginPath();
-    canvasCtx.strokeStyle = '#ff80ab';
-    canvasCtx.lineWidth = Math.max(3, gridContainer.offsetWidth / 70);
+
+    // 半透明のピンク色を指定
+    canvasCtx.strokeStyle = 'rgba(255, 128, 171, 0.7)';
+    
+    // 線の太さをセルの半径程度に設定
+    const radius = (selectedCells[0].element.offsetWidth / 2);
+    canvasCtx.lineWidth = radius;
     canvasCtx.lineCap = 'round';
     canvasCtx.lineJoin = 'round';
+
+    canvasCtx.beginPath();
     canvasCtx.moveTo(selectedCells[0].centerX, selectedCells[0].centerY);
     for (let i = 1; i < selectedCells.length; i++) {
         canvasCtx.lineTo(selectedCells[i].centerX, selectedCells[i].centerY);
@@ -259,48 +253,73 @@ function clearCanvas() {
     canvasCtx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
 }
 
-function createParticles(cell) {
-    if (!cell || !gridArea) return;
-    const startX = cell.centerX;
-    const startY = cell.centerY;
+function createParticles(cell, gameContainer, gameContainerRect, gridContainerRect) {
+    if (!cell) return;
+
+    // game-containerからgrid-containerまでの相対オフセットを計算
+    const offsetX = gridContainerRect.left - gameContainerRect.left;
+    const offsetY = gridContainerRect.top - gameContainerRect.top;
+    
+    // セルの中心座標を game-container の左上からの相対座標に変換
+    const startX = offsetX + cell.centerX;
+    const startY = offsetY + cell.centerY;
+
     for (let i = 0; i < NUM_PARTICLES_PER_CELL; i++) {
         const particle = document.createElement('div');
         particle.classList.add('particle');
         const angle = Math.random() * Math.PI * 2;
         const distance = Math.random() * 60 + 30;
+        
+        // パーティクルの初期位置を game-container を基準に設定
         particle.style.left = `${startX - PARTICLE_BASE_SIZE_PX / 2}px`;
         particle.style.top = `${startY - PARTICLE_BASE_SIZE_PX / 2}px`;
+
         particle.style.setProperty('--particle-x', `${Math.cos(angle) * distance}px`);
         particle.style.setProperty('--particle-y', `${Math.sin(angle) * distance}px`);
         particle.style.setProperty('--particle-mid-x', `${Math.cos(angle) * distance * 0.5}px`);
         particle.style.setProperty('--particle-mid-y', `${Math.sin(angle) * distance * 0.5}px`);
         particle.style.animationDelay = `${Math.random() * 0.25}s`;
-        gridArea.appendChild(particle);
+        
+        // パーティクルを game-container に追加
+        gameContainer.appendChild(particle);
+        
         particle.addEventListener('animationend', () => particle.remove());
     }
 }
 
 async function processClearedCells() {
-    const cellsToClear = [...selectedCells];
-    clearSelection();
-    clearSound.play();
-    cellsToClear.forEach(cell => createParticles(cell));
-    const removalPromises = cellsToClear.map(cell => {
-        if(cell?.element) {
-            cell.element.classList.add('clearing');
-            return new Promise(resolve => setTimeout(resolve, 600));
-        }
-        return Promise.resolve();
-    });
-    await Promise.all(removalPromises);
-    cellsToClear.forEach(clearedCell => {
-        if (clearedCell?.row !== undefined && cellsData[clearedCell.row]?.[clearedCell.col]) {
-            cellsData[clearedCell.row][clearedCell.col].value = null;
-            clearedCell.element?.classList.remove('clearing');
-        }
-    });
-    await applyGravityAndRefill();
-    generateNewMission();
+    isAnimating = true;
+    try {
+        const cellsToClear = [...selectedCells];
+        clearSelection();
+        clearSound.play();
+
+        // 修正：パーティクル生成の前にコンテナの情報を一度だけ取得
+        const gameContainer = document.getElementById('game-container');
+        const gameContainerRect = gameContainer.getBoundingClientRect();
+        const gridContainerRect = gridContainer.getBoundingClientRect();
+
+        cellsToClear.forEach(cell => createParticles(cell, gameContainer, gameContainerRect, gridContainerRect));
+        
+        const removalPromises = cellsToClear.map(cell => {
+            if(cell?.element) {
+                cell.element.classList.add('clearing');
+                return new Promise(resolve => setTimeout(resolve, 600));
+            }
+            return Promise.resolve();
+        });
+        await Promise.all(removalPromises);
+        cellsToClear.forEach(clearedCell => {
+            if (clearedCell?.row !== undefined && cellsData[clearedCell.row]?.[clearedCell.col]) {
+                cellsData[clearedCell.row][clearedCell.col].value = null;
+                clearedCell.element?.classList.remove('clearing');
+            }
+        });
+        await applyGravityAndRefill();
+        generateNewMission();
+    } finally {
+        isAnimating = false;
+    }
 }
 
 async function applyGravityAndRefill() {
