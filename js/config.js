@@ -34,3 +34,4 @@ const startButton = document.getElementById('start-button');
 const quitButton = document.getElementById('quit-button');
 const titleMessageArea = document.getElementById('title-message-area');
 const titleUpdateButton = document.getElementById('update-button-title');
+const gameContainer = document.getElementById('game-container');

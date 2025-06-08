@@ -12,6 +12,7 @@ body {
     touch-action: none;
 }
 
+/* 修正点：重複していた定義をこちらに統合しました */
 #game-container {
     display: flex;
     flex-direction: column;
@@ -24,6 +25,8 @@ body {
     max-width: 400px;
     box-sizing: border-box;
     position: relative;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
 }
 
 /* --- ゲーム盤のレイアウト --- */
@@ -111,9 +114,7 @@ body {
     right: 25px;
     bottom: 25px;
     pointer-events: none;
-    /* z-indexを1にして、セルの背景に描画されるようにする */
     z-index: 1; 
-    /* フィルタは使用しない */
 }
 
 /* --- クリア時のアニメーション --- */
@@ -194,12 +195,17 @@ body {
 .action-button:hover {
     background-color: #e91e63;
 }
+
 #version-display {
-    position: absolute;
-    bottom: 5px;
-    left: 10px;
     font-size: 0.75rem;
     color: #bcaaa4;
+}
+
+#title-bottom-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
 }
 
 /* --- 更新通知 --- */
@@ -288,11 +294,6 @@ body {
 /* --- 画面遷移と初期状態 --- */
 #game-container.hidden, #title-screen.hidden {
     display: none;
-}
-
-#game-container {
-    opacity: 0;
-    transition: opacity 0.5s ease-in-out;
 }
 
 /* --- ゲーム画面のボタン調整 --- */
