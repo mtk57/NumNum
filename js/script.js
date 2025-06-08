@@ -18,6 +18,15 @@ function showGameScreen() {
     }, { once: true });
 
     gameContainer.classList.remove('hidden');
+    
+    // ↓ ここからが修正・追記部分 ↓
+    // ゲーム画面のフェードイン完了後に関数を実行するためのリスナーを追加
+    gameContainer.addEventListener('transitionend', () => {
+        // このタイミングでセルの位置とサイズを正しく計算する
+        resizeCanvasAndCells();
+    }, { once: true });
+    // ↑ ここまでが修正・追記部分 ↑
+    
     // displayプロパティが反映されてからopacityを変更するため、わずかな遅延を入れる
     setTimeout(() => {
         gameContainer.style.opacity = '1';
@@ -56,7 +65,7 @@ function initGame() {
         }
         cellsData.push(rowData);
     }
-    resizeCanvasAndCells();
+
     updateAllCellDisplays();
     generateNewMission();
     updateScoreDisplay();
