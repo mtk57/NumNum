@@ -1,11 +1,11 @@
 {
-  "name": "SimpleNumConnect",
-  "short_name": "SimpleNumConnect",
+  "name": "NumNum",
+  "short_name": "NumNum",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
-  "description": "SimpleNumConnect",
+  "description": "NumNum",
   "icons": [
     {
       "src": "icons/icon-192x192.png",
