@@ -503,7 +503,9 @@ if (starCanvas && starCtx) {
                 y: Math.random() * starCanvas.height,
                 size: size,
                 speedY: Math.random() * 1 + 0.5,
-                img: img
+                img: img,
+                rotation: Math.random() * Math.PI * 2, // 初期回転角度
+                rotationSpeed: (Math.random() - 0.5) * 0.04 // 回転速度 (正と負の値)
             });
         }
     }
@@ -512,7 +514,14 @@ if (starCanvas && starCtx) {
         starCtx.clearRect(0, 0, starCanvas.width, starCanvas.height);
         stars.forEach(star => {
             if (star.img && star.img.complete) {
-                starCtx.drawImage(star.img, star.x, star.y, star.size, star.size);
+                starCtx.save(); // 現在の描画状態を保存
+                // 星の中心に原点を移動
+                starCtx.translate(star.x + star.size / 2, star.y + star.size / 2);
+                // キャンバスを回転
+                starCtx.rotate(star.rotation);
+                // 中心合わせで画像を描画
+                starCtx.drawImage(star.img, -star.size / 2, -star.size / 2, star.size, star.size);
+                starCtx.restore(); // 描画状態を元に戻す
             }
         });
     }
@@ -520,6 +529,7 @@ if (starCanvas && starCtx) {
     function updateStars() {
         stars.forEach(star => {
             star.y += star.speedY;
+            star.rotation += star.rotationSpeed; // 回転角度を更新
             if (star.y > starCanvas.height) {
                 star.y = -star.size;
                 star.x = Math.random() * starCanvas.width;
