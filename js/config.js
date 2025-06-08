@@ -27,3 +27,10 @@ const selectSounds = [ new Howl({ src: ['sounds/se1.mp3'], volume: 0.7 }) ];
 const successSound = new Howl({ src: ['sounds/success.mp3'] });
 const failureSound = new Howl({ src: ['sounds/failure.mp3'] });
 const clearSound = new Howl({ src: ['sounds/clear.mp3'] });
+
+// --- タイトル画面のDOM要素 ---
+const titleScreen = document.getElementById('title-screen');
+const startButton = document.getElementById('start-button');
+const quitButton = document.getElementById('quit-button');
+const titleMessageArea = document.getElementById('title-message-area');
+const titleUpdateButton = document.getElementById('update-button-title');

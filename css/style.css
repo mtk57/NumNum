@@ -248,3 +248,57 @@ body {
     #version-display { font-size: 0.65rem; left: 5px; }
     #update-notification { width: calc(100% - 20px); top: 10px; left: 10px; right: 10px; transform: none; font-size: 0.8rem; }
 }
+
+/* --- タイトル画面 --- */
+#title-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #fff0f5;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    z-index: 100;
+    transition: opacity 0.5s ease-in-out;
+}
+
+#title-logo {
+    max-width: 90%;
+    width: 320px;
+    height: auto;
+}
+
+#title-controls {
+    display: flex;
+    gap: 20px;
+}
+
+#title-message-area {
+    position: absolute;
+    bottom: 30px;
+    min-height: 1.5em;
+    font-weight: bold;
+    color: #4db6ac;
+}
+
+/* --- 画面遷移と初期状態 --- */
+#game-container.hidden, #title-screen.hidden {
+    display: none;
+}
+
+#game-container {
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+/* --- ゲーム画面のボタン調整 --- */
+#quit-button {
+    background-color: #78909c; /* グレー系の色 */
+}
+#quit-button:hover {
+    background-color: #546e7a;
+}

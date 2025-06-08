@@ -10,6 +10,32 @@ let currentLevel = 1;
 // PWAハンドラからも参照されるグローバル変数
 let newWorker = null;
 
+// --- 画面遷移ロジック ---
+function showGameScreen() {
+    titleScreen.style.opacity = '0';
+    titleScreen.addEventListener('transitionend', () => {
+        titleScreen.classList.add('hidden');
+    }, { once: true });
+
+    gameContainer.classList.remove('hidden');
+    // displayプロパティが反映されてからopacityを変更するため、わずかな遅延を入れる
+    setTimeout(() => {
+        gameContainer.style.opacity = '1';
+    }, 10);
+}
+
+function showTitleScreen() {
+    gameContainer.style.opacity = '0';
+    gameContainer.addEventListener('transitionend', () => {
+        gameContainer.classList.add('hidden');
+    }, { once: true });
+
+    titleScreen.classList.remove('hidden');
+    setTimeout(() => {
+        titleScreen.style.opacity = '1';
+    }, 10);
+}
+
 // --- ゲームロジック ---
 
 function initGame() {
@@ -391,6 +417,20 @@ function updateScoreDisplay() {
 }
 
 // --- イベントリスナー設定 ---
+// タイトル画面のボタン
+startButton.addEventListener('click', () => {
+    initGame(); // ゲームを初期化
+    showGameScreen(); // ゲーム画面へ遷移
+});
+
+quitButton.addEventListener('click', () => {
+    if (confirm('タイトルに戻りますか？\n現在のスコアやレベルはリセットされます。')) {
+        showTitleScreen();
+    }
+});
+
+
+// ゲーム画面の操作エリア
 const eventAreaForInteraction = document.getElementById('grid-area');
 eventAreaForInteraction.addEventListener('mousedown', handleInteractionStart);
 document.addEventListener('mousemove', handleInteractionMove);
@@ -402,5 +442,6 @@ document.addEventListener('touchcancel', handleInteractionEnd);
 giveUpButton.addEventListener('click', handleGiveUp);
 window.addEventListener('resize', resizeCanvasAndCells);
 
-// --- ゲーム初期化 ---
-initGame();
+// --- 初期化 ---
+// initGame(); // 初期化はSTARTボタン押下時に行うので、ここはコメントアウトまたは削除
+document.body.style.opacity = 1; // ちらつき防止のため、JS読み込み完了後に表示

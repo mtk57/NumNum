@@ -48,46 +48,58 @@ if (updateButton) {
     updateButton.addEventListener('click', handleUpdate);
 }
 
-if (manualCheckUpdateButton) {
-    manualCheckUpdateButton.addEventListener('click', () => {
-        messageArea.textContent = "";
+// タイトル画面のUPDATEボタンに対する処理
+if (titleUpdateButton) {
+    titleUpdateButton.addEventListener('click', () => {
+        if (!titleMessageArea) return; // メッセージエリアの存在確認
+        titleMessageArea.textContent = "";
+
         if (!navigator.serviceWorker?.getRegistration) {
-            messageArea.textContent = "Service Workerが利用できません。";
+            titleMessageArea.textContent = "Service Workerが利用できません。";
             return;
         }
 
         navigator.serviceWorker.getRegistration().then(registration => {
             if (!registration) {
-                messageArea.textContent = "更新チェック機能が有効ではありません。";
+                titleMessageArea.textContent = "更新チェック機能が有効ではありません。";
                 return;
             }
             if (registration.waiting) {
                 newWorker = registration.waiting;
-                messageArea.textContent = "新しいバージョンが待機中です！";
+                titleMessageArea.textContent = "新しいバージョンが待機中です！";
                 showUpdateNotification();
                 return;
             }
 
-            messageArea.textContent = "更新を確認中...";
+            titleMessageArea.textContent = "更新を確認中...";
             registration.update().then(updatedReg => {
                 if (updatedReg.installing) {
-                    messageArea.textContent = "新しいバージョンをインストール中...";
+                    titleMessageArea.textContent = "新しいバージョンをインストール中...";
                     trackInstalling(updatedReg.installing);
                 } else if (updatedReg.waiting) {
                     newWorker = updatedReg.waiting;
-                    messageArea.textContent = "新しいバージョンが見つかりました！";
+                    titleMessageArea.textContent = "新しいバージョンが見つかりました！";
                     showUpdateNotification();
                 } else {
-                    messageArea.textContent = "現在、最新バージョンです。";
+                    titleMessageArea.textContent = "現在、最新バージョンです。";
                 }
             }).catch(err => {
                 console.error("Update check failed:", err);
-                messageArea.textContent = "更新チェックに失敗しました。";
+                titleMessageArea.textContent = "更新チェックに失敗しました。";
             });
         }).catch(err => {
             console.error("Get registration failed:", err);
-            messageArea.textContent = "更新機能の状態取得に失敗しました。";
+            titleMessageArea.textContent = "更新機能の状態取得に失敗しました。";
         });
+
+        // メッセージを5秒後にクリアする
+        setTimeout(() => {
+            // メッセージ内容が変わっていない場合のみクリア
+            const currentMessage = titleMessageArea.textContent;
+            if(currentMessage.includes("更新") || currentMessage.includes("最新バージョンです") || currentMessage.includes("失敗")) {
+               titleMessageArea.textContent = "";
+            }
+        }, 5000);
     });
 }
 
