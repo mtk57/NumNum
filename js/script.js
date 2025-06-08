@@ -416,6 +416,7 @@ function updateScoreDisplay() {
 // --- イベントリスナー設定 ---
 // タイトル画面のボタン
 startButton.addEventListener('click', () => {
+    startSound.play();
     initGame();
     showGameScreen();
 });

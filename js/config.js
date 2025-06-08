@@ -23,6 +23,7 @@ const updateButton = document.getElementById('update-button');
 const manualCheckUpdateButton = document.getElementById('manual-check-update-button');
 
 // --- Sound Initialization ---
+const startSound = new Howl({ src: ['sounds/start.mp3'] });
 const selectSounds = [ new Howl({ src: ['sounds/se1.mp3'], volume: 0.7 }) ];
 const successSound = new Howl({ src: ['sounds/success.mp3'] });
 const failureSound = new Howl({ src: ['sounds/failure.mp3'] });
