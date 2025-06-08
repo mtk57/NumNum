@@ -270,7 +270,27 @@ body {
     gap: 40px;
     z-index: 100;
     transition: opacity 0.5s ease-in-out;
+    overflow: hidden; /* 追加 */
 }
+
+/* ここからが追加・修正部分 */
+#star-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0; /* ロゴやボタンより後ろに配置 */
+}
+
+#title-logo,
+#title-bottom-area,
+#title-message-area {
+    position: relative;
+    z-index: 1; /* キャンバスより手前に表示 */
+}
+/* ここまでが追加・修正部分 */
+
 
 #title-logo {
     max-width: 90%;

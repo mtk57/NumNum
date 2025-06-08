@@ -12,6 +12,7 @@ let newWorker = null;
 
 // --- 画面遷移ロジック ---
 function showGameScreen() {
+    stopStarAnimation(); // ★ 星のアニメーションを停止
     titleScreen.style.opacity = '0';
     titleScreen.addEventListener('transitionend', () => {
         titleScreen.classList.add('hidden');
@@ -19,21 +20,17 @@ function showGameScreen() {
 
     gameContainer.classList.remove('hidden');
     
-    // ↓ ここからが修正・追記部分 ↓
-    // ゲーム画面のフェードイン完了後に関数を実行するためのリスナーを追加
     gameContainer.addEventListener('transitionend', () => {
-        // このタイミングでセルの位置とサイズを正しく計算する
         resizeCanvasAndCells();
     }, { once: true });
-    // ↑ ここまでが修正・追記部分 ↑
     
-    // displayプロパティが反映されてからopacityを変更するため、わずかな遅延を入れる
     setTimeout(() => {
         gameContainer.style.opacity = '1';
     }, 10);
 }
 
 function showTitleScreen() {
+    startStarAnimation(); // ★ 星のアニメーションを開始
     gameContainer.style.opacity = '0';
     gameContainer.addEventListener('transitionend', () => {
         gameContainer.classList.add('hidden');
@@ -267,10 +264,8 @@ function drawLines() {
     clearCanvas();
     if (selectedCells.length < 2) return;
 
-    // 半透明のピンク色を指定
     canvasCtx.strokeStyle = 'rgba(255, 128, 171, 0.7)';
     
-    // 線の太さをセルの半径程度に設定
     const radius = (selectedCells[0].element.offsetWidth / 2);
     canvasCtx.lineWidth = radius;
     canvasCtx.lineCap = 'round';
@@ -290,12 +285,8 @@ function clearCanvas() {
 
 function createParticles(cell, gameContainer, gameContainerRect, gridContainerRect) {
     if (!cell) return;
-
-    // game-containerからgrid-containerまでの相対オフセットを計算
     const offsetX = gridContainerRect.left - gameContainerRect.left;
     const offsetY = gridContainerRect.top - gameContainerRect.top;
-    
-    // セルの中心座標を game-container の左上からの相対座標に変換
     const startX = offsetX + cell.centerX;
     const startY = offsetY + cell.centerY;
 
@@ -305,7 +296,6 @@ function createParticles(cell, gameContainer, gameContainerRect, gridContainerRe
         const angle = Math.random() * Math.PI * 2;
         const distance = Math.random() * 60 + 30;
         
-        // パーティクルの初期位置を game-container を基準に設定
         particle.style.left = `${startX - PARTICLE_BASE_SIZE_PX / 2}px`;
         particle.style.top = `${startY - PARTICLE_BASE_SIZE_PX / 2}px`;
 
@@ -315,7 +305,6 @@ function createParticles(cell, gameContainer, gameContainerRect, gridContainerRe
         particle.style.setProperty('--particle-mid-y', `${Math.sin(angle) * distance * 0.5}px`);
         particle.style.animationDelay = `${Math.random() * 0.25}s`;
         
-        // パーティクルを game-container に追加
         gameContainer.appendChild(particle);
         
         particle.addEventListener('animationend', () => particle.remove());
@@ -329,7 +318,6 @@ async function processClearedCells() {
         clearSelection();
         clearSound.play();
 
-        // 修正：パーティクル生成の前にコンテナの情報を一度だけ取得
         const gameContainer = document.getElementById('game-container');
         const gameContainerRect = gameContainer.getBoundingClientRect();
         const gridContainerRect = gridContainer.getBoundingClientRect();
@@ -428,8 +416,8 @@ function updateScoreDisplay() {
 // --- イベントリスナー設定 ---
 // タイトル画面のボタン
 startButton.addEventListener('click', () => {
-    initGame(); // ゲームを初期化
-    showGameScreen(); // ゲーム画面へ遷移
+    initGame();
+    showGameScreen();
 });
 
 quitButton.addEventListener('click', () => {
@@ -437,7 +425,6 @@ quitButton.addEventListener('click', () => {
         showTitleScreen();
     }
 });
-
 
 // ゲーム画面の操作エリア
 const eventAreaForInteraction = document.getElementById('grid-area');
@@ -452,5 +439,124 @@ giveUpButton.addEventListener('click', handleGiveUp);
 window.addEventListener('resize', resizeCanvasAndCells);
 
 // --- 初期化 ---
-// initGame(); // 初期化はSTARTボタン押下時に行うので、ここはコメントアウトまたは削除
-document.body.style.opacity = 1; // ちらつき防止のため、JS読み込み完了後に表示
+document.body.style.opacity = 1;
+
+// --- ここからが追加部分：タイトル画面の星アニメーション ---
+const starCanvas = document.getElementById('star-canvas');
+const starCtx = starCanvas ? starCanvas.getContext('2d') : null;
+
+let stars = [];
+const starImages = [];
+let starAnimationId = null;
+let areStarsReady = false;
+
+// アニメーション関連の関数をグローバルに定義
+var startStarAnimation = function() {};
+var stopStarAnimation = function() {};
+var resizeStarCanvas = function() {};
+
+if (starCanvas && starCtx) {
+    const numStars = 50;
+    const starImageSources = [
+        'images/star01.png', 'images/star02.png', 'images/star03.png',
+        'images/star04.png', 'images/star05.png', 'images/star06.png'
+    ];
+
+    function preloadStarImages(callback) {
+        let loaded = 0;
+        starImageSources.forEach(src => {
+            const img = new Image();
+            img.onload = () => {
+                loaded++;
+                if (loaded === starImageSources.length) {
+                    areStarsReady = true;
+                    callback();
+                }
+            };
+            img.onerror = () => {
+                console.error(`Failed to load star image: ${src}`);
+                loaded++;
+                if (loaded === starImageSources.length) {
+                    areStarsReady = true;
+                    callback();
+                }
+            };
+            img.src = src;
+            starImages.push(img);
+        });
+    }
+
+    resizeStarCanvas = function() {
+        starCanvas.width = window.innerWidth;
+        starCanvas.height = window.innerHeight;
+    };
+
+    function setupStars() {
+        resizeStarCanvas();
+        stars = [];
+        if (starImages.length === 0) return;
+        for (let i = 0; i < numStars; i++) {
+            const img = starImages[Math.floor(Math.random() * starImages.length)];
+            const size = Math.random() * 30 + 15;
+            stars.push({
+                x: Math.random() * starCanvas.width,
+                y: Math.random() * starCanvas.height,
+                size: size,
+                speedY: Math.random() * 1 + 0.5,
+                img: img
+            });
+        }
+    }
+
+    function drawStars() {
+        starCtx.clearRect(0, 0, starCanvas.width, starCanvas.height);
+        stars.forEach(star => {
+            if (star.img && star.img.complete) {
+                starCtx.drawImage(star.img, star.x, star.y, star.size, star.size);
+            }
+        });
+    }
+
+    function updateStars() {
+        stars.forEach(star => {
+            star.y += star.speedY;
+            if (star.y > starCanvas.height) {
+                star.y = -star.size;
+                star.x = Math.random() * starCanvas.width;
+            }
+        });
+    }
+
+    function animateStars() {
+        updateStars();
+        drawStars();
+        starAnimationId = requestAnimationFrame(animateStars);
+    }
+
+    startStarAnimation = function() {
+        if (!areStarsReady || starAnimationId) return;
+        setupStars();
+        animateStars();
+    };
+
+    stopStarAnimation = function() {
+        if (starAnimationId) {
+            cancelAnimationFrame(starAnimationId);
+            starAnimationId = null;
+        }
+    };
+
+    // 最初に画像を読み込んでアニメーションを開始
+    preloadStarImages(() => {
+        if (!titleScreen.classList.contains('hidden')) {
+            startStarAnimation();
+        }
+    });
+
+    // リサイズイベントに星空キャンバスのリサイズ処理も追加
+    window.addEventListener('resize', () => {
+        if (!titleScreen.classList.contains('hidden')) {
+            resizeStarCanvas();
+        }
+    });
+}
