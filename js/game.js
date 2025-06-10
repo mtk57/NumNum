@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isAnimating = false;
     let missionsSinceLastLevelUp = 0;
     let currentLevel = 1;
+    let lastTap = 0; // 【追加】ダブルタップ検知用の変数
 
     // --- ゲームロジック ---
     initGame = function() {
@@ -135,6 +136,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleInteractionEnd(event) {
+        // --- 【ここから修正】iPhoneのダブルタップ対応 ---
+        if (event.type === 'touchend') {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 300 && tapLength > 0) {
+                // ダブルタップを検知
+                event.preventDefault();
+                clearSelection(); // 選択中の線を消す
+                isDrawing = false; // 描画状態をリセット
+                resetAllCellValues(); // セルをリセット
+                lastTap = 0; // タップ情報をリセット
+                return; // ここで処理を終了
+            }
+            lastTap = currentTime;
+        }
+        // --- 【ここまで修正】 ---
+
         if (!isDrawing) return;
         isDrawing = false;
         if (checkMission()) {
@@ -371,15 +389,11 @@ document.addEventListener('DOMContentLoaded', () => {
         scoreDisplay.textContent = score;
     }
 
-    /**
-     * 【追加】セルの数値をすべてリセットします。
-     */
     function resetAllCellValues() {
         if (isAnimating) return;
     
-        clearSelection(); // 選択中のセルをクリア
+        clearSelection(); 
     
-        // アニメーションのために全セルに 'clearing' クラスを追加
         const allCells = cellsData.flat();
         allCells.forEach(cell => {
             if(cell.element) {
@@ -387,7 +401,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     
-        // アニメーションの完了を待ってから数値を変更
         setTimeout(() => {
             for (let r = 0; r < GRID_SIZE; r++) {
                 for (let c = 0; c < GRID_SIZE; c++) {
@@ -401,9 +414,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-            updateAllCellDisplays(); // 表示を更新
+            updateAllCellDisplays(); 
     
-            // 'new-cell' アニメーションが終わったらクラスを削除
             setTimeout(() => {
                  allCells.forEach(cell => {
                     if(cell.element) {
@@ -419,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }, 1500);
     
-        }, 600); // clearingアニメーションの時間に合わせる
+        }, 600);
     }
 
 
@@ -441,6 +453,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('touchend', handleInteractionEnd);
     document.addEventListener('touchcancel', handleInteractionEnd);
     window.addEventListener('resize', resizeCanvasAndCells);
-    // 【追加】ダブルクリックでリセットするイベントリスナー
+    // 【変更なし】ダブルクリックでリセットするイベントリスナー（PC向け）
     eventAreaForInteraction.addEventListener('dblclick', resetAllCellValues);
 });
