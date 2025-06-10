@@ -12,7 +12,6 @@ body {
     touch-action: none;
 }
 
-/* 修正点：重複していた定義をこちらに統合しました */
 #game-container {
     display: flex;
     flex-direction: column;
@@ -26,7 +25,7 @@ body {
     box-sizing: border-box;
     position: relative;
     opacity: 0;
-    transition: opacity 0.5s ease-in-out;
+    transition: opacity 0.5s ease-in-out, background-color 0.5s ease-in-out;
 }
 
 /* --- ゲーム盤のレイアウト --- */

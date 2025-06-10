@@ -16,6 +16,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentLevel = 1;
     let lastTap = 0; // 【追加】ダブルタップ検知用の変数
 
+    // --- 新しい関数：背景色を変更 ---
+    function changeBackgroundColor() {
+        const gameContainer = document.getElementById('game-container');
+        // config.jsで定義したBACKGROUND_COLORSを直接参照
+        if (gameContainer && typeof BACKGROUND_COLORS !== 'undefined' && BACKGROUND_COLORS.length > 0) {
+            const randomColor = BACKGROUND_COLORS[Math.floor(Math.random() * BACKGROUND_COLORS.length)];
+            gameContainer.style.backgroundColor = randomColor;
+        }
+    }
+
     // --- ゲームロジック ---
     initGame = function() {
         gridContainer.innerHTML = '';
@@ -24,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentLevel = 1;
         score = 0;
         currentMission.target = 0;
+        changeBackgroundColor(); // ★ 追加
         for (let r = 0; r < GRID_SIZE; r++) {
             const rowData = [];
             for (let c = 0; c < GRID_SIZE; c++) {
@@ -165,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 missionsSinceLastLevelUp = 0;
                 currentMission.target = 0;
                 messageArea.textContent = `レベル ${currentLevel -1} クリア！レベル ${currentLevel} スタート！`;
+                changeBackgroundColor(); // ★ 追加
             }
             processClearedCells();
         } else {

@@ -35,3 +35,30 @@ const quitButton = document.getElementById('quit-button');
 const titleMessageArea = document.getElementById('title-message-area');
 const titleUpdateButton = document.getElementById('update-button-title');
 const gameContainer = document.getElementById('game-container');
+
+// --- ゲームの背景色パレット ---
+const BACKGROUND_COLORS = [
+    // パステルカラー (16色)
+    '#fff0f5', // ラベンダーブラッシュ
+    '#f0fff0', // ハニーデュー
+    '#f5fffa', // ミントクリーム
+    '#fff5ee', // シーシェル
+    '#f0f8ff', // アリスブルー
+    '#fafad2', // ライトゴールデンロッドイエロー
+    '#ffe4e1', // ミスティーローズ
+    '#E1BEE7', // ソフトなラベンダー
+    '#FFCCBC', // ピーチパフ
+    '#B3E5FC', // ペールシアン
+    '#C8E6C9', // パステルグリーン
+    '#FFF9C4', // クリーミーイエロー
+    '#F8BBD0', // ベビーピンク
+    '#D1C4E9', // ライトパープル
+    '#FFE0B2', // ソフトオレンジ
+    '#ECEFF1', // ブルーグレー
+
+    // ビビッドカラー (4色)
+    '#FF4081', // ショッキングピンク
+    '#00BCD4', // ブライトシアン
+    '#FFEB3B', // サニーイエロー
+    '#4CAF50', // リーフグリーン
+];
