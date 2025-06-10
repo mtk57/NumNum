@@ -169,19 +169,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function handleGiveUp() {
-        if (isAnimating) return;
-        clearSelection();
-        currentLevel++;
-        missionsSinceLastLevelUp = 0;
-        currentMission.target = 0;
-        generateNewMission();
-        messageArea.textContent = `次のレベル (${currentLevel}) に進みます！`;
-        setTimeout(() => {
-            if (messageArea.textContent === `次のレベル (${currentLevel}) に進みます！`) messageArea.textContent = "";
-        }, 2000);
-    }
-
     function addCellToSelection(event) {
         const targetCellData = getCellFromEvent(event);
         if (!targetCellData || selectedCells.find(sc => sc.id === targetCellData.id)) return;
@@ -384,6 +371,58 @@ document.addEventListener('DOMContentLoaded', () => {
         scoreDisplay.textContent = score;
     }
 
+    /**
+     * 【追加】セルの数値をすべてリセットします。
+     */
+    function resetAllCellValues() {
+        if (isAnimating) return;
+    
+        clearSelection(); // 選択中のセルをクリア
+    
+        // アニメーションのために全セルに 'clearing' クラスを追加
+        const allCells = cellsData.flat();
+        allCells.forEach(cell => {
+            if(cell.element) {
+                cell.element.classList.add('clearing');
+            }
+        });
+    
+        // アニメーションの完了を待ってから数値を変更
+        setTimeout(() => {
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (cellsData[r] && cellsData[r][c]) {
+                        const newValue = Math.floor(Math.random() * (MAX_NUM - MIN_NUM + 1)) + MIN_NUM;
+                        cellsData[r][c].value = newValue;
+                        if(cellsData[r][c].element) {
+                            cellsData[r][c].element.classList.remove('clearing');
+                            cellsData[r][c].element.classList.add('new-cell');
+                        }
+                    }
+                }
+            }
+            updateAllCellDisplays(); // 表示を更新
+    
+            // 'new-cell' アニメーションが終わったらクラスを削除
+            setTimeout(() => {
+                 allCells.forEach(cell => {
+                    if(cell.element) {
+                        cell.element.classList.remove('new-cell');
+                    }
+                });
+            }, 500);
+    
+            messageArea.textContent = "セルの数字をリセットしました。";
+            setTimeout(() => {
+                if (messageArea.textContent === "セルの数字をリセットしました。") {
+                    messageArea.textContent = "";
+                }
+            }, 1500);
+    
+        }, 600); // clearingアニメーションの時間に合わせる
+    }
+
+
     // --- イベントリスナー設定 ---
     quitButton.addEventListener('click', () => {
         if (confirm('タイトルに戻りますか？\n現在のスコアやレベルはリセットされます。')) {
@@ -401,6 +440,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('touchmove', handleInteractionMove, { passive: false });
     document.addEventListener('touchend', handleInteractionEnd);
     document.addEventListener('touchcancel', handleInteractionEnd);
-    giveUpButton.addEventListener('click', handleGiveUp);
     window.addEventListener('resize', resizeCanvasAndCells);
+    // 【追加】ダブルクリックでリセットするイベントリスナー
+    eventAreaForInteraction.addEventListener('dblclick', resetAllCellValues);
 });

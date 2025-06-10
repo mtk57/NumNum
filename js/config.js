@@ -14,7 +14,6 @@ const canvasCtx = lineCanvas.getContext('2d');
 const missionDisplay = document.getElementById('mission-display');
 const scoreDisplay = document.getElementById('score');
 const messageArea = document.getElementById('message-area');
-const giveUpButton = document.getElementById('give-up-button');
 const gridArea = document.getElementById('grid-area');
 const glowLayer = document.getElementById('glow-layer');
 // PWAハンドラからも参照されるDOM要素
