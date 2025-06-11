@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let missionsSinceLastLevelUp = 0;
     let currentLevel = 1;
     let lastTap = 0; // 【追加】ダブルタップ検知用の変数
+    let gameStartTime = null; // 【追加】ゲーム開始時刻を記録する変数
 
     // --- 新しい関数：背景色を変更 ---
     function changeBackgroundColor() {
@@ -28,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- ゲームロジック ---
     initGame = function() {
+        gameStartTime = Date.now(); // 【変更】ゲーム開始時刻を記録
         gridContainer.innerHTML = '';
         cellsData = [];
         missionsSinceLastLevelUp = 0;
@@ -147,38 +149,67 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleInteractionEnd(event) {
-        // --- 【ここから修正】iPhoneのダブルタップ対応 ---
+        // 【ここから修正】iPhoneのダブルタップ対応
         if (event.type === 'touchend') {
             const currentTime = new Date().getTime();
             const tapLength = currentTime - lastTap;
             if (tapLength < 300 && tapLength > 0) {
-                // ダブルタップを検知
                 event.preventDefault();
-                clearSelection(); // 選択中の線を消す
-                isDrawing = false; // 描画状態をリセット
-                resetAllCellValues(); // セルをリセット
-                lastTap = 0; // タップ情報をリセット
-                return; // ここで処理を終了
+                clearSelection(); 
+                isDrawing = false; 
+                resetAllCellValues(); 
+                lastTap = 0; 
+                return; 
             }
             lastTap = currentTime;
         }
-        // --- 【ここまで修正】 ---
+        // 【ここまで修正】
 
         if (!isDrawing) return;
         isDrawing = false;
+
         if (checkMission()) {
             messageArea.textContent = "ミッション成功！";
             score += selectedCells.length * 10;
             updateScoreDisplay();
             missionsSinceLastLevelUp++;
-            if (missionsSinceLastLevelUp >= TARGET_MISSIONS_PER_LEVEL) {
-                currentLevel++;
-                missionsSinceLastLevelUp = 0;
-                currentMission.target = 0;
-                messageArea.textContent = `レベル ${currentLevel -1} クリア！レベル ${currentLevel} スタート！`;
-                changeBackgroundColor(); // ★ 追加
+
+            const isLevelUp = missionsSinceLastLevelUp >= TARGET_MISSIONS_PER_LEVEL;
+            const isFinalClear = isLevelUp && currentLevel >= MAX_LEVEL;
+
+            // 【ここから変更】最終レベルクリア時の処理を追加
+            if (isFinalClear) {
+                processClearedCells(true); // 新しいミッションの生成を抑制
+
+                const timeTaken = Date.now() - gameStartTime;
+                const minutes = Math.floor(timeTaken / 60000);
+                const seconds = Math.round((timeTaken % 60000) / 1000);
+
+                // アニメーションの完了を待ってからアラートを表示
+                setTimeout(() => {
+                    alert(
+                        `🎉 全レベルクリア！おめでとうございます！ 🎉\n\n` +
+                        `最終スコア: ${score}\n` +
+                        `クリアタイム: ${minutes}分 ${seconds}秒\n\n` +
+                        `OKボタンを押すとタイトルに戻ります。`
+                    );
+                    if (typeof showTitleScreen === 'function') {
+                        showTitleScreen();
+                    }
+                }, 800); // セル消去アニメーション(600ms)より少し長く待つ
+
+            } else {
+                if (isLevelUp) {
+                    currentLevel++;
+                    missionsSinceLastLevelUp = 0;
+                    currentMission.target = 0;
+                    messageArea.textContent = `レベル ${currentLevel - 1} クリア！レベル ${currentLevel} スタート！`;
+                    changeBackgroundColor();
+                }
+                processClearedCells();
             }
-            processClearedCells();
+            // 【ここまで変更】
+
         } else {
             if (selectedCells.length > 0) {
                 failureSound.play();
@@ -298,8 +329,9 @@ document.addEventListener('DOMContentLoaded', () => {
             particle.addEventListener('animationend', () => particle.remove());
         }
     }
-
-    async function processClearedCells() {
+    
+    // 【変更】最終クリア時に新しいミッションの生成を抑制するフラグを追加
+    async function processClearedCells(suppressNewMission = false) {
         isAnimating = true;
         try {
             const cellsToClear = [...selectedCells];
@@ -327,7 +359,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             await applyGravityAndRefill();
-            generateNewMission();
+            if (!suppressNewMission) {
+                generateNewMission();
+            }
         } finally {
             isAnimating = false;
         }
