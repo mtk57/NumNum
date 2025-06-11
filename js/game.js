@@ -17,6 +17,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastTap = 0; // 【追加】ダブルタップ検知用の変数
     let gameStartTime = null; // 【追加】ゲーム開始時刻を記録する変数
 
+    /**
+     * 【追加】現在のレベルに応じた難易度設定を取得するヘルパー関数
+     */
+    function getCurrentLevelSettings() {
+        // レベルが設定テーブルの範囲外の場合、最後の（最も難しい）設定に固定する
+        const levelIndex = Math.max(0, Math.min(currentLevel - 1, LEVEL_DIFFICULTY_SETTINGS.length - 1));
+        return LEVEL_DIFFICULTY_SETTINGS[levelIndex];
+    }
+
     // --- 新しい関数：背景色を変更 ---
     function changeBackgroundColor() {
         const gameContainer = document.getElementById('game-container');
@@ -29,18 +38,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- ゲームロジック ---
     initGame = function() {
-        gameStartTime = Date.now(); // 【変更】ゲーム開始時刻を記録
+        gameStartTime = Date.now();
         gridContainer.innerHTML = '';
         cellsData = [];
         missionsSinceLastLevelUp = 0;
         currentLevel = 1;
         score = 0;
         currentMission.target = 0;
-        changeBackgroundColor(); // ★ 追加
+        changeBackgroundColor();
+        
+        // 【変更】レベルに応じたセルの値を生成
+        const settings = getCurrentLevelSettings();
         for (let r = 0; r < GRID_SIZE; r++) {
             const rowData = [];
             for (let c = 0; c < GRID_SIZE; c++) {
-                const cellValue = Math.floor(Math.random() * (MAX_NUM - MIN_NUM + 1)) + MIN_NUM;
+                const cellValue = Math.floor(Math.random() * (settings.cellMax - settings.cellMin + 1)) + settings.cellMin;
                 const cellElement = createCellElement(r, c, cellValue);
                 const cellObj = { value: cellValue, element: cellElement, row: r, col: c, id: `cell-${r}-${c}-${Date.now()}`, centerX: 0, centerY: 0, collisionRadius: 0 };
                 gridContainer.appendChild(cellElement);
@@ -97,8 +109,11 @@ document.addEventListener('DOMContentLoaded', () => {
         missionDisplay.textContent = `レベル ${currentLevel} (${missionsSinceLastLevelUp}/${TARGET_MISSIONS_PER_LEVEL}) - ${currentMission.text || 'ミッション準備中...'}`;
     }
 
+    /**
+     * 【変更】ミッション（目標値）の生成ロジックをレベル別設定に対応
+     */
     function generateNewMission() {
-        let targetValue;
+        // 新しいミッションを生成する必要があるか（レベルアップ直後か、ゲーム開始時）を判断
         if (missionsSinceLastLevelUp === 0 || currentMission.target === 0) {
             let availableCells = cellsData.flat().filter(c => c && c.value !== null);
             if (availableCells.length < 2) {
@@ -106,21 +121,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateMissionDisplay();
                 return;
             }
-            let numToPick = Math.min(Math.floor(Math.random() * 2) + 2, availableCells.length);
-            let potentialSolutionCells = [];
-            for(let i=0; i<numToPick; i++) {
-                 if(availableCells.length === 0) break;
-                potentialSolutionCells.push(availableCells.splice(Math.floor(Math.random() * availableCells.length), 1)[0]);
-            }
-            if (potentialSolutionCells.length < 2) {
-                 currentMission = { type: 'sum', target: 0, text: "ミッション作成不可" };
-                 updateMissionDisplay();
-                 return;
-            }
-            targetValue = potentialSolutionCells.reduce((acc, cell) => acc + cell.value, 0);
-            if (targetValue > 50 && potentialSolutionCells.length > 2) targetValue = Math.floor(Math.random() * 30) + 10;
-            else if (targetValue > 30 && potentialSolutionCells.length === 2) targetValue = Math.floor(Math.random() * 20) + 5;
-            else if (targetValue < 5) targetValue = Math.floor(Math.random() * 5) + 5;
+
+            // 現在のレベル設定を取得
+            const settings = getCurrentLevelSettings();
+            // 設定された値域の中からランダムな目標値を生成
+            const targetValue = Math.floor(Math.random() * (settings.missionMax - settings.missionMin + 1)) + settings.missionMin;
             currentMission.target = targetValue;
         }
         currentMission.type = 'sum';
@@ -149,7 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleInteractionEnd(event) {
-        // 【ここから修正】iPhoneのダブルタップ対応
         if (event.type === 'touchend') {
             const currentTime = new Date().getTime();
             const tapLength = currentTime - lastTap;
@@ -163,7 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             lastTap = currentTime;
         }
-        // 【ここまで修正】
 
         if (!isDrawing) return;
         isDrawing = false;
@@ -177,15 +180,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const isLevelUp = missionsSinceLastLevelUp >= TARGET_MISSIONS_PER_LEVEL;
             const isFinalClear = isLevelUp && currentLevel >= MAX_LEVEL;
 
-            // 【ここから変更】最終レベルクリア時の処理を追加
             if (isFinalClear) {
-                processClearedCells(true); // 新しいミッションの生成を抑制
+                processClearedCells(true); 
 
                 const timeTaken = Date.now() - gameStartTime;
                 const minutes = Math.floor(timeTaken / 60000);
                 const seconds = Math.round((timeTaken % 60000) / 1000);
 
-                // アニメーションの完了を待ってからアラートを表示
                 setTimeout(() => {
                     alert(
                         `🎉 全レベルクリア！おめでとうございます！ 🎉\n\n` +
@@ -196,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (typeof showTitleScreen === 'function') {
                         showTitleScreen();
                     }
-                }, 800); // セル消去アニメーション(600ms)より少し長く待つ
+                }, 800);
 
             } else {
                 if (isLevelUp) {
@@ -208,7 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 processClearedCells();
             }
-            // 【ここまで変更】
 
         } else {
             if (selectedCells.length > 0) {
@@ -330,7 +330,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // 【変更】最終クリア時に新しいミッションの生成を抑制するフラグを追加
     async function processClearedCells(suppressNewMission = false) {
         isAnimating = true;
         try {
@@ -369,6 +368,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function applyGravityAndRefill() {
         const animationPromises = [];
+        // 【変更】レベルに応じたセルの値を生成
+        const settings = getCurrentLevelSettings();
+
         for (let c = 0; c < GRID_SIZE; c++) {
             let emptySlotsInCol = 0;
             for (let r = GRID_SIZE - 1; r >= 0; r--) {
@@ -402,7 +404,8 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let i = 0; i < emptySlotsInCol; i++) {
                 const cellToFill = cellsData[i][c];
                 if (!cellToFill?.element) continue;
-                cellToFill.value = Math.floor(Math.random() * (MAX_NUM - MIN_NUM + 1)) + MIN_NUM;
+                // 【変更】補充されるセルの値もレベル設定を考慮
+                cellToFill.value = Math.floor(Math.random() * (settings.cellMax - settings.cellMin + 1)) + settings.cellMin;
                 cellToFill.element.classList.add('new-cell');
                 animationPromises.push(new Promise(resolve => {
                     setTimeout(() => {
@@ -447,11 +450,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     
+        // 【変更】リセット時のセルの値もレベル設定を考慮
+        const settings = getCurrentLevelSettings();
         setTimeout(() => {
             for (let r = 0; r < GRID_SIZE; r++) {
                 for (let c = 0; c < GRID_SIZE; c++) {
                     if (cellsData[r] && cellsData[r][c]) {
-                        const newValue = Math.floor(Math.random() * (MAX_NUM - MIN_NUM + 1)) + MIN_NUM;
+                        const newValue = Math.floor(Math.random() * (settings.cellMax - settings.cellMin + 1)) + settings.cellMin;
                         cellsData[r][c].value = newValue;
                         if(cellsData[r][c].element) {
                             cellsData[r][c].element.classList.remove('clearing');
@@ -499,6 +504,5 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('touchend', handleInteractionEnd);
     document.addEventListener('touchcancel', handleInteractionEnd);
     window.addEventListener('resize', resizeCanvasAndCells);
-    // 【変更なし】ダブルクリックでリセットするイベントリスナー（PC向け）
     eventAreaForInteraction.addEventListener('dblclick', resetAllCellValues);
 });

@@ -1,7 +1,23 @@
 // --- 定数とグローバル変数 ---
 const GRID_SIZE = 4;
+// MIN_NUMとMAX_NUMはレベル別設定に移行するため、直接は使用されなくなります。
 const MIN_NUM = 1;
 const MAX_NUM = 9;
+
+// 【追加】レベルごとの難易度設定テーブル
+const LEVEL_DIFFICULTY_SETTINGS = [
+    // Level 1
+    { cellMin: 1, cellMax: 5, missionMin: 2, missionMax: 9 },
+    // Level 2
+    { cellMin: 1, cellMax: 6, missionMin: 4, missionMax: 13 },
+    // Level 3
+    { cellMin: 1, cellMax: 7, missionMin: 10, missionMax: 16 },
+    // Level 4
+    { cellMin: 1, cellMax: 8, missionMin: 12, missionMax: 19 },
+    // Level 5
+    { cellMin: 1, cellMax: 9, missionMin: 20, missionMax: 40 },
+];
+
 const TARGET_MISSIONS_PER_LEVEL = 5;
 const MAX_LEVEL = 5;
 const DEBUG_SHOW_COLLISION_CIRCLES = false;
