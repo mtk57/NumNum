@@ -317,7 +317,19 @@ body {
 
 /* --- ゲーム画面のボタン調整 --- */
 #quit-button {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     background-color: #78909c; /* グレー系の色 */
+    color: white;
+    font-size: 1.6rem;
+    line-height: 36px;
+    text-align: center;
+    padding: 0;
+    z-index: 5;
 }
 #quit-button:hover {
     background-color: #546e7a;
