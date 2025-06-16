@@ -28,11 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 新しい関数：背景色を変更 ---
     function changeBackgroundColor() {
-        const gameContainer = document.getElementById('game-container');
+        const middleArea = document.getElementById('middle-area');
         // config.jsで定義したBACKGROUND_COLORSを直接参照
-        if (gameContainer && typeof BACKGROUND_COLORS !== 'undefined' && BACKGROUND_COLORS.length > 0) {
+        if (middleArea && typeof BACKGROUND_COLORS !== 'undefined' && BACKGROUND_COLORS.length > 0) {
             const randomColor = BACKGROUND_COLORS[Math.floor(Math.random() * BACKGROUND_COLORS.length)];
-            gameContainer.style.backgroundColor = randomColor;
+            middleArea.style.backgroundColor = randomColor;
         }
     }
 
@@ -45,7 +45,9 @@ document.addEventListener('DOMContentLoaded', () => {
         currentLevel = 1;
         score = 0;
         currentMission.target = 0;
-        changeBackgroundColor();
+        // ミドルエリアの背景色を初期色に戻すか、ランダムに変更
+        const middleArea = document.getElementById('middle-area');
+        if (middleArea) middleArea.style.backgroundColor = '#fcebb6';
         
         // 【変更】レベルに応じたセルの値を生成
         const settings = getCurrentLevelSettings();
@@ -106,7 +108,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateMissionDisplay() {
-        missionDisplay.textContent = `レベル ${currentLevel} (${missionsSinceLastLevelUp}/${TARGET_MISSIONS_PER_LEVEL}) - ${currentMission.text || 'ミッション準備中...'}`;
+        const stageLabel = document.getElementById('stage-label');
+        const progressBar = document.getElementById('progress-bar');
+        const missionText = document.getElementById('mission-text');
+
+        if (!stageLabel || !progressBar || !missionText) return;
+
+        stageLabel.textContent = `ステージ ${currentLevel}`;
+
+        const progress = missionsSinceLastLevelUp >= TARGET_MISSIONS_PER_LEVEL
+            ? 100
+            : (missionsSinceLastLevelUp / TARGET_MISSIONS_PER_LEVEL) * 100;
+        progressBar.style.width = `${progress}%`;
+
+        missionText.textContent = currentMission.text || 'ミッション準備中...';
     }
 
     /**
@@ -176,6 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
             score += selectedCells.length * 10;
             updateScoreDisplay();
             missionsSinceLastLevelUp++;
+            updateMissionDisplay(); // 進捗バーを更新
 
             const isLevelUp = missionsSinceLastLevelUp >= TARGET_MISSIONS_PER_LEVEL;
             const isFinalClear = isLevelUp && currentLevel >= MAX_LEVEL;
@@ -189,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 setTimeout(() => {
                     alert(
-                        `🎉 全レベルクリア！おめでとうございます！ 🎉\n\n` +
+                        `🎉 全ステージクリア！おめでとうございます！ 🎉\n\n` +
                         `最終スコア: ${score}\n` +
                         `クリアタイム: ${minutes}分 ${seconds}秒\n\n` +
                         `OKボタンを押すとタイトルに戻ります。`
@@ -204,8 +220,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentLevel++;
                     missionsSinceLastLevelUp = 0;
                     currentMission.target = 0;
-                    messageArea.textContent = `レベル ${currentLevel - 1} クリア！レベル ${currentLevel} スタート！`;
+                    messageArea.textContent = `ステージ ${currentLevel - 1} クリア！ステージ ${currentLevel} スタート！`;
                     changeBackgroundColor();
+                    updateMissionDisplay(); // 新しいステージ情報を即時反映
                 }
                 processClearedCells();
             }
@@ -435,7 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateScoreDisplay() {
-        scoreDisplay.textContent = score;
+        // scoreDisplay.textContent = score; // スコア表示がなくなったため不要
     }
 
     function resetAllCellValues() {
@@ -488,7 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- イベントリスナー設定 ---
     quitButton.addEventListener('click', () => {
-        if (confirm('タイトルに戻りますか？\n現在のスコアやレベルはリセットされます。')) {
+        if (confirm('タイトルに戻りますか？\n現在の進行状況はリセットされます。')) {
             if(typeof showTitleScreen === 'function') {
                 showTitleScreen();
             }

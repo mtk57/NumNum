@@ -15,17 +15,81 @@ body {
 #game-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    background-color: #ffffff; /* ホワイト */
-    box-shadow: 0 10px 20px rgba(211, 175, 189, 0.25); /* ピンク系の影 */
-    padding: 20px;
+    box-shadow: 0 10px 20px rgba(211, 175, 189, 0.25);
+    padding: 0;
     border-radius: 12px;
     width: 100%;
     max-width: 400px;
+    height: 90vh;
+    max-height: 800px;
     box-sizing: border-box;
     position: relative;
     opacity: 0;
-    transition: opacity 0.5s ease-in-out, background-color 0.5s ease-in-out;
+    transition: opacity 0.5s ease-in-out;
+    overflow: hidden;
+}
+
+/* --- 新しいエリアのスタイル --- */
+#top-area {
+    background-color: #a0e6d2;
+    padding: 15px 20px;
+    color: #333;
+    font-weight: bold;
+}
+
+#middle-area {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fcebb6; /* デフォルト色 */
+    padding: 15px 0;
+    transition: background-color 0.5s ease-in-out;
+}
+
+#bottom-area {
+    background-color: #a0e6d2;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* --- トップエリア内の要素のスタイル --- */
+#stage-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+#stage-label {
+    font-size: 1.2rem;
+    color: #ffffff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+#progress-container {
+    width: 100%;
+    height: 10px;
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+#progress-bar {
+    width: 0%; /* JSで制御 */
+    height: 100%;
+    background: linear-gradient(90deg, #f06292, #ff80ab);
+    border-radius: 5px;
+    transition: width 0.5s ease-out;
+}
+
+#mission-text {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #424242;
 }
 
 /* --- ゲーム盤のレイアウト --- */
@@ -34,7 +98,7 @@ body {
     width: 100%;
     max-width: 370px;
     aspect-ratio: 1 / 1;
-    margin: 0 auto 15px auto;
+    margin: 0 auto;
 }
 
 #glow-layer {
@@ -74,8 +138,8 @@ body {
 
 /* --- セルとエフェクト --- */
 .cell {
-    background-color: #ffe4e1; /* ミスティーローズ */
-    color: #a1887f; /* ブラウンがかったグレー */
+    background-color: #4fc3f7; /* 明るい青 */
+    color: #ffffff; /* 白 */
     border-radius: 50%;
     display: flex;
     justify-content: center;
@@ -90,6 +154,7 @@ body {
     height: 88%;
     justify-self: center;
     align-self: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .cell.selected {
@@ -156,21 +221,12 @@ body {
 }
 
 /* --- UI要素 --- */
-#mission-display {
-    font-size: 1.1rem;
-    font-weight: bold;
-    margin-bottom: 12px;
-    text-align: center;
-    color: #ec407a;
-    min-height: 3em;
-}
-#score-display {
-    font-size: 1rem;
-    margin-bottom: 12px;
+#mission-display, #score-display {
+    display: none; /* 古いUIは非表示 */
 }
 #message-area {
-    min-height: 1.5em;
-    margin-top: 10px;
+    min-height: auto;
+    margin-top: 0;
     font-weight: bold;
     color: #4db6ac;
 }
@@ -247,7 +303,6 @@ body {
 /* --- レスポンシブ対応 --- */
 @media (max-width: 360px) {
     .cell { font-size: 1.25rem; }
-    #mission-display { font-size: 0.9rem; }
     .action-button { padding: 8px 12px; font-size: 0.8rem; }
     .particle { width: 8px; height: 8px; }
     #version-display { font-size: 0.65rem; left: 5px; }
@@ -272,7 +327,6 @@ body {
     overflow: hidden; /* 追加 */
 }
 
-/* ここからが追加・修正部分 */
 #star-canvas {
     position: absolute;
     top: 0;
@@ -288,8 +342,6 @@ body {
     position: relative;
     z-index: 1; /* キャンバスより手前に表示 */
 }
-/* ここまでが追加・修正部分 */
-
 
 #title-logo {
     max-width: 90%;
@@ -317,20 +369,17 @@ body {
 
 /* --- ゲーム画面のボタン調整 --- */
 #quit-button {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    width: 36px;
-    height: 36px;
+    position: static;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    background-color: #78909c; /* グレー系の色 */
+    background-color: rgba(0, 0, 0, 0.2);
     color: white;
-    font-size: 1.6rem;
-    line-height: 36px;
+    font-size: 1.4rem;
+    line-height: 32px;
     text-align: center;
     padding: 0;
-    z-index: 5;
 }
 #quit-button:hover {
-    background-color: #546e7a;
+    background-color: rgba(0, 0, 0, 0.4);
 }
