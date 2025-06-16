@@ -14,27 +14,87 @@ document.addEventListener('DOMContentLoaded', () => {
     let isAnimating = false;
     let missionsSinceLastLevelUp = 0;
     let currentLevel = 1;
-    let lastTap = 0; // 【追加】ダブルタップ検知用の変数
-    let gameStartTime = null; // 【追加】ゲーム開始時刻を記録する変数
+    let lastTap = 0;
+    let gameStartTime = null;
+
+    // --- Star Variables ---
+    let smallStarCount = 0;
+    let bigStarCount = 0;
+    const MAX_SMALL_STARS = 20;
+    const MAX_BIG_STARS = 10;
+
 
     /**
-     * 【追加】現在のレベルに応じた難易度設定を取得するヘルパー関数
+     * 現在のレベルに応じた難易度設定を取得するヘルパー関数
      */
     function getCurrentLevelSettings() {
-        // レベルが設定テーブルの範囲外の場合、最後の（最も難しい）設定に固定する
         const levelIndex = Math.max(0, Math.min(currentLevel - 1, LEVEL_DIFFICULTY_SETTINGS.length - 1));
         return LEVEL_DIFFICULTY_SETTINGS[levelIndex];
     }
 
-    // --- 新しい関数：背景色を変更 ---
+    /**
+     * ミドルエリアの背景色をランダムに変更
+     */
     function changeBackgroundColor() {
         const middleArea = document.getElementById('middle-area');
-        // config.jsで定義したBACKGROUND_COLORSを直接参照
         if (middleArea && typeof BACKGROUND_COLORS !== 'undefined' && BACKGROUND_COLORS.length > 0) {
             const randomColor = BACKGROUND_COLORS[Math.floor(Math.random() * BACKGROUND_COLORS.length)];
             middleArea.style.backgroundColor = randomColor;
         }
     }
+
+    // --- Star Logic Functions ---
+
+    /**
+     * 指定された数の★を追加し、表示を更新
+     * @param {number} count 追加する★の数
+     */
+    function addStars(count) {
+        if (bigStarCount >= MAX_BIG_STARS) {
+            return; // 大きい★が上限に達していたら何もしない
+        }
+
+        smallStarCount += count;
+
+        if (smallStarCount >= MAX_SMALL_STARS) {
+            const newBigStars = Math.floor(smallStarCount / MAX_SMALL_STARS);
+            bigStarCount = Math.min(MAX_BIG_STARS, bigStarCount + newBigStars);
+            smallStarCount %= MAX_SMALL_STARS;
+
+            // 大きい★が上限に達した場合、小さい★は0にする
+            if (bigStarCount >= MAX_BIG_STARS) {
+                smallStarCount = 0;
+            }
+        }
+        updateStarDisplay();
+    }
+
+    /**
+     * 現在の★の数に応じて画面表示を更新
+     */
+    function updateStarDisplay() {
+        const smallStarContainer = document.getElementById('small-star-container');
+        const bigStarContainer = document.getElementById('big-star-container');
+        if (!smallStarContainer || !bigStarContainer) return;
+
+        smallStarContainer.innerHTML = '';
+        bigStarContainer.innerHTML = '';
+
+        for (let i = 0; i < smallStarCount; i++) {
+            const starImg = document.createElement('img');
+            starImg.src = 'images/star01.png';
+            starImg.classList.add('small-star');
+            smallStarContainer.appendChild(starImg);
+        }
+
+        for (let i = 0; i < bigStarCount; i++) {
+            const starImg = document.createElement('img');
+            starImg.src = 'images/star01.png';
+            starImg.classList.add('big-star');
+            bigStarContainer.appendChild(starImg);
+        }
+    }
+
 
     // --- ゲームロジック ---
     initGame = function() {
@@ -45,9 +105,14 @@ document.addEventListener('DOMContentLoaded', () => {
         currentLevel = 1;
         score = 0;
         currentMission.target = 0;
-        changeBackgroundColor(); // ★変更点: ゲーム開始時に背景色をランダムにする
         
-        // 【変更】レベルに応じたセルの値を生成
+        // ★の数をリセット
+        smallStarCount = 0;
+        bigStarCount = 0;
+        updateStarDisplay();
+
+        changeBackgroundColor();
+        
         const settings = getCurrentLevelSettings();
         for (let r = 0; r < GRID_SIZE; r++) {
             const rowData = [];
@@ -122,11 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         missionText.textContent = currentMission.text || 'ミッション準備中...';
     }
 
-    /**
-     * 【変更】ミッション（目標値）の生成ロジックをレベル別設定に対応
-     */
     function generateNewMission() {
-        // 新しいミッションを生成する必要があるか（レベルアップ直後か、ゲーム開始時）を判断
         if (missionsSinceLastLevelUp === 0 || currentMission.target === 0) {
             let availableCells = cellsData.flat().filter(c => c && c.value !== null);
             if (availableCells.length < 2) {
@@ -135,9 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // 現在のレベル設定を取得
             const settings = getCurrentLevelSettings();
-            // 設定された値域の中からランダムな目標値を生成
             const targetValue = Math.floor(Math.random() * (settings.missionMax - settings.missionMin + 1)) + settings.missionMin;
             currentMission.target = targetValue;
         }
@@ -185,11 +244,16 @@ document.addEventListener('DOMContentLoaded', () => {
         isDrawing = false;
 
         if (checkMission()) {
+            const clearedCellCount = selectedCells.length;
+            if (clearedCellCount >= 3) {
+                addStars(clearedCellCount);
+            }
+
             messageArea.textContent = "ミッション成功！";
-            score += selectedCells.length * 10;
+            score += clearedCellCount * 10;
             updateScoreDisplay();
             missionsSinceLastLevelUp++;
-            updateMissionDisplay(); // 進捗バーを更新
+            updateMissionDisplay();
 
             const isLevelUp = missionsSinceLastLevelUp >= TARGET_MISSIONS_PER_LEVEL;
             const isFinalClear = isLevelUp && currentLevel >= MAX_LEVEL;
@@ -220,7 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentMission.target = 0;
                     messageArea.textContent = `ステージ ${currentLevel - 1} クリア！ステージ ${currentLevel} スタート！`;
                     changeBackgroundColor();
-                    updateMissionDisplay(); // 新しいステージ情報を即時反映
+                    updateMissionDisplay();
                 }
                 processClearedCells();
             }
@@ -383,7 +447,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function applyGravityAndRefill() {
         const animationPromises = [];
-        // 【変更】レベルに応じたセルの値を生成
         const settings = getCurrentLevelSettings();
 
         for (let c = 0; c < GRID_SIZE; c++) {
@@ -419,7 +482,6 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let i = 0; i < emptySlotsInCol; i++) {
                 const cellToFill = cellsData[i][c];
                 if (!cellToFill?.element) continue;
-                // 【変更】補充されるセルの値もレベル設定を考慮
                 cellToFill.value = Math.floor(Math.random() * (settings.cellMax - settings.cellMin + 1)) + settings.cellMin;
                 cellToFill.element.classList.add('new-cell');
                 animationPromises.push(new Promise(resolve => {
@@ -465,7 +527,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     
-        // 【変更】リセット時のセルの値もレベル設定を考慮
         const settings = getCurrentLevelSettings();
         setTimeout(() => {
             for (let r = 0; r < GRID_SIZE; r++) {

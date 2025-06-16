@@ -49,11 +49,47 @@ body {
 
 #bottom-area {
     background-color: #a0e6d2;
-    min-height: 60px;
+    min-height: 80px;
     display: flex;
-    align-items: center;
+    flex-direction: column;
     justify-content: center;
+    align-items: center;
+    padding: 5px;
+    box-sizing: border-box;
+    position: relative;
 }
+
+#star-display-container {
+    width: 100%;
+}
+
+.star-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+}
+
+#small-star-container {
+    min-height: 22px;
+}
+
+#big-star-container {
+    min-height: 37px;
+}
+
+.small-star {
+    width: 20px;
+    height: 20px;
+    margin: 0 1px;
+}
+
+.big-star {
+    width: 35px;
+    height: 35px;
+    margin: 0 2px;
+}
+
 
 /* --- トップエリア内の要素のスタイル --- */
 #stage-info {
@@ -230,6 +266,14 @@ body {
     margin-top: 0;
     font-weight: bold;
     color: #4db6ac;
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.7);
+    padding: 2px 8px;
+    border-radius: 10px;
+    z-index: 10;
 }
 #controls-area {
     display: flex;
