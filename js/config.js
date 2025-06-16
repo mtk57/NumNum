@@ -24,11 +24,21 @@ const DEBUG_SHOW_COLLISION_CIRCLES = false;
 const NUM_PARTICLES_PER_CELL = 12;
 const PARTICLE_BASE_SIZE_PX = 12;
 
+// --- ★の表示設定 ---
+const MAX_SMALL_STARS_DISPLAY = 20;
+const MAX_BIG_STARS_DISPLAY = 10;
+// 繋げた数ともらえる小さい★の数の対応表
+const STAR_REWARDS_TABLE = {
+    3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10,
+    11: 11, 12: 12, 13: 13, 14: 14, 15: 15, 16: 16
+};
+
+
 // --- DOM Element Selections ---
 const gridContainer = document.getElementById('grid-container');
 const lineCanvas = document.getElementById('line-canvas');
 const canvasCtx = lineCanvas.getContext('2d');
-const messageArea = document.getElementById('message-area');
+// messageAreaは削除
 const gridArea = document.getElementById('grid-area');
 const glowLayer = document.getElementById('glow-layer');
 // PWAハンドラからも参照されるDOM要素

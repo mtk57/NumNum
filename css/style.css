@@ -261,20 +261,6 @@ body {
 #mission-display, #score-display {
     display: none; /* 古いUIは非表示 */
 }
-#message-area {
-    min-height: auto;
-    margin-top: 0;
-    font-weight: bold;
-    color: #4db6ac;
-    position: absolute;
-    bottom: 5px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.7);
-    padding: 2px 8px;
-    border-radius: 10px;
-    z-index: 10;
-}
 #controls-area {
     display: flex;
     flex-wrap: wrap;

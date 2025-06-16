@@ -20,9 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Star Variables ---
     let smallStarCount = 0;
     let bigStarCount = 0;
-    const MAX_SMALL_STARS = 20;
-    const MAX_BIG_STARS = 10;
-
 
     /**
      * 現在のレベルに応じた難易度設定を取得するヘルパー関数
@@ -50,19 +47,19 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {number} count 追加する★の数
      */
     function addStars(count) {
-        if (bigStarCount >= MAX_BIG_STARS) {
+        if (bigStarCount >= MAX_BIG_STARS_DISPLAY) {
             return; // 大きい★が上限に達していたら何もしない
         }
 
         smallStarCount += count;
 
-        if (smallStarCount >= MAX_SMALL_STARS) {
-            const newBigStars = Math.floor(smallStarCount / MAX_SMALL_STARS);
-            bigStarCount = Math.min(MAX_BIG_STARS, bigStarCount + newBigStars);
-            smallStarCount %= MAX_SMALL_STARS;
+        if (smallStarCount >= MAX_SMALL_STARS_DISPLAY) {
+            const newBigStars = Math.floor(smallStarCount / MAX_SMALL_STARS_DISPLAY);
+            bigStarCount = Math.min(MAX_BIG_STARS_DISPLAY, bigStarCount + newBigStars);
+            smallStarCount %= MAX_SMALL_STARS_DISPLAY;
 
             // 大きい★が上限に達した場合、小さい★は0にする
-            if (bigStarCount >= MAX_BIG_STARS) {
+            if (bigStarCount >= MAX_BIG_STARS_DISPLAY) {
                 smallStarCount = 0;
             }
         }
@@ -245,11 +242,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (checkMission()) {
             const clearedCellCount = selectedCells.length;
-            if (clearedCellCount >= 3) {
-                addStars(clearedCellCount);
+            if (STAR_REWARDS_TABLE[clearedCellCount]) {
+                const starsToAdd = STAR_REWARDS_TABLE[clearedCellCount];
+                addStars(starsToAdd);
             }
 
-            messageArea.textContent = "ミッション成功！";
             score += clearedCellCount * 10;
             updateScoreDisplay();
             missionsSinceLastLevelUp++;
@@ -282,7 +279,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentLevel++;
                     missionsSinceLastLevelUp = 0;
                     currentMission.target = 0;
-                    messageArea.textContent = `ステージ ${currentLevel - 1} クリア！ステージ ${currentLevel} スタート！`;
                     changeBackgroundColor();
                     updateMissionDisplay();
                 }
@@ -550,13 +546,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             }, 500);
-    
-            messageArea.textContent = "セルの数字をリセットしました。";
-            setTimeout(() => {
-                if (messageArea.textContent === "セルの数字をリセットしました。") {
-                    messageArea.textContent = "";
-                }
-            }, 1500);
     
         }, 600);
     }
