@@ -57,8 +57,9 @@ body {
 
 /* --- トップエリア内の要素のスタイル --- */
 #stage-info {
+    position: relative;
     display: flex;
-    justify-content: space-between;
+    justify-content: center; /* ★変更点: 中央寄せ */
     align-items: center;
     margin-bottom: 10px;
 }
@@ -369,7 +370,10 @@ body {
 
 /* --- ゲーム画面のボタン調整 --- */
 #quit-button {
-    position: static;
+    position: absolute; /* ★変更点: 絶対配置で右端に固定 */
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
     width: 32px;
     height: 32px;
     border-radius: 50%;

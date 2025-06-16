@@ -45,9 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentLevel = 1;
         score = 0;
         currentMission.target = 0;
-        // ミドルエリアの背景色を初期色に戻すか、ランダムに変更
-        const middleArea = document.getElementById('middle-area');
-        if (middleArea) middleArea.style.backgroundColor = '#fcebb6';
+        changeBackgroundColor(); // ★変更点: ゲーム開始時に背景色をランダムにする
         
         // 【変更】レベルに応じたセルの値を生成
         const settings = getCurrentLevelSettings();
