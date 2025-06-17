@@ -441,3 +441,28 @@ body {
     border-radius: 12px; 
     animation: flashEffect 0.4s ease-out;
 }
+
+/* --- 星のアニメーション (元気な感じに修正) --- */
+@keyframes star-animation {
+    0% {
+        transform: translateY(0px) rotate(-4deg) scale(1);
+        opacity: 0.95;
+    }
+    50% {
+        transform: translateY(-6px) rotate(0deg) scale(1.1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(0px) rotate(4deg) scale(1);
+        opacity: 0.95;
+    }
+}
+
+.small-star, .big-star {
+    /* アニメーションを適用 (速度と動きをアップ) */
+    animation-name: star-animation;
+    animation-duration: 0.5s; /* アニメーションの速度を速くしました */
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}

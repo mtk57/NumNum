@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * 現在の★の数に応じて画面表示を更新
+     * 【変更点】現在の★の数に応じて画面表示を更新し、アニメーションを追加
      */
     function updateStarDisplay() {
         const smallStarContainer = document.getElementById('small-star-container');
@@ -86,6 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const starImg = document.createElement('img');
             starImg.src = star.src;
             starImg.classList.add('small-star');
+            // アニメーションの開始タイミングをランダムにずらす
+            starImg.style.animationDelay = `${Math.random() * 2.5}s`;
             smallStarContainer.appendChild(starImg);
         });
 
@@ -93,6 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const starImg = document.createElement('img');
             starImg.src = 'images/star01.png'; // 大きい★はデザイン固定
             starImg.classList.add('big-star');
+            // アニメーションの開始タイミングをランダムにずらす
+            starImg.style.animationDelay = `${Math.random() * 2.5}s`;
             bigStarContainer.appendChild(starImg);
         }
     }
