@@ -23,7 +23,7 @@ const MAX_LEVEL = 5;
 const DEBUG_SHOW_COLLISION_CIRCLES = false;
 
 // --- ★の表示設定 ---
-const MAX_SMALL_STARS_DISPLAY = 10;
+const MAX_SMALL_STARS_DISPLAY = 1;
 const MAX_BIG_STARS_DISPLAY = 35; // ★修正点: 5から35に変更
 // 繋げた数ともらえる小さい★の数の対応表
 const STAR_REWARDS_TABLE = {

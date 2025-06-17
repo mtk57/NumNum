@@ -101,6 +101,15 @@ document.addEventListener('DOMContentLoaded', () => {
             starImg.style.animationDelay = `${Math.random() * 2.5}s`;
             bigStarContainer.appendChild(starImg);
         }
+
+        // ★★★ ここから修正 ★★★
+        // 新しいキャラクターが追加された後、コンテナを一番右までスクロールさせて最新のキャラが見えるようにする
+        // コンテンツの総幅(scrollWidth)がコンテナの表示幅(clientWidth)より大きい場合のみ実行
+        if (bigStarContainer.scrollWidth > bigStarContainer.clientWidth) {
+             // scrollLeftプロパティに最大のスクロール量を設定することで、末尾に移動
+            bigStarContainer.scrollLeft = bigStarContainer.scrollWidth;
+        }
+        // ★★★ ここまで修正 ★★★
     }
 
 
