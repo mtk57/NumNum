@@ -7,15 +7,15 @@ const MAX_NUM = 9;
 // 【追加】レベルごとの難易度設定テーブル
 const LEVEL_DIFFICULTY_SETTINGS = [
     // Level 1
-    { cellMin: 1, cellMax: 5, missionMin: 2, missionMax: 9 },
+    { cellMin: 1, cellMax: 5, missionMin: 4, missionMax: 9 },
     // Level 2
-    { cellMin: 1, cellMax: 6, missionMin: 4, missionMax: 13 },
+    { cellMin: 1, cellMax: 6, missionMin: 6, missionMax: 10 },
     // Level 3
-    { cellMin: 1, cellMax: 7, missionMin: 10, missionMax: 16 },
+    { cellMin: 1, cellMax: 7, missionMin: 8, missionMax: 14 },
     // Level 4
-    { cellMin: 1, cellMax: 8, missionMin: 12, missionMax: 19 },
+    { cellMin: 1, cellMax: 8, missionMin: 9, missionMax: 16 },
     // Level 5
-    { cellMin: 1, cellMax: 9, missionMin: 20, missionMax: 40 },
+    { cellMin: 1, cellMax: 9, missionMin: 10, missionMax: 22 },
 ];
 
 const TARGET_MISSIONS_PER_LEVEL = 5;
@@ -25,12 +25,25 @@ const NUM_PARTICLES_PER_CELL = 12;
 const PARTICLE_BASE_SIZE_PX = 12;
 
 // --- ★の表示設定 ---
-const MAX_SMALL_STARS_DISPLAY = 20;
-const MAX_BIG_STARS_DISPLAY = 10;
+const MAX_SMALL_STARS_DISPLAY = 10;
+const MAX_BIG_STARS_DISPLAY = 5;
 // 繋げた数ともらえる小さい★の数の対応表
 const STAR_REWARDS_TABLE = {
-    3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10,
-    11: 11, 12: 12, 13: 13, 14: 14, 15: 15, 16: 16
+      2: 1,
+      3: 2,
+      4: 3,
+      5: 4,
+      6: 5,
+      7: 6,
+      8: 7,
+      9: 8,
+     10: 9,
+     11: 10,
+     12: 11,
+     13: 12,
+     14: 13,
+     15: 14,
+     16: 15
 };
 
 
