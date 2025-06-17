@@ -7,24 +7,28 @@ const MAX_NUM = 9;
 // 【追加】レベルごとの難易度設定テーブル
 const LEVEL_DIFFICULTY_SETTINGS = [
     // Level 1
-    { cellMin: 1, cellMax: 5, missionMin: 4, missionMax: 9 },
+    { cellMin: 1, cellMax: 5, missionMin: 4, missionMax: 8 },
     // Level 2
-    { cellMin: 1, cellMax: 6, missionMin: 6, missionMax: 10 },
+    { cellMin: 1, cellMax: 6, missionMin: 5, missionMax: 10 },
     // Level 3
-    { cellMin: 1, cellMax: 7, missionMin: 8, missionMax: 14 },
+    { cellMin: 1, cellMax: 7, missionMin: 6, missionMax: 12 },
     // Level 4
-    { cellMin: 1, cellMax: 8, missionMin: 9, missionMax: 16 },
+    { cellMin: 1, cellMax: 8, missionMin: 7, missionMax: 14 },
     // Level 5
-    { cellMin: 1, cellMax: 9, missionMin: 10, missionMax: 22 },
+    { cellMin: 1, cellMax: 9, missionMin: 8, missionMax: 18 },
+    // Level 6
+    { cellMin: 1, cellMax: 9, missionMin: 9, missionMax: 22 },
+    // Level 7
+    { cellMin: 1, cellMax: 9, missionMin: 10, missionMax: 30 },
 ];
 
 const TARGET_MISSIONS_PER_LEVEL = 5;
-const MAX_LEVEL = 5;
+const MAX_LEVEL = 7;
 const DEBUG_SHOW_COLLISION_CIRCLES = false;
 
 // --- ★の表示設定 ---
-const MAX_SMALL_STARS_DISPLAY = 1;
-const MAX_BIG_STARS_DISPLAY = 35; // ★修正点: 5から35に変更
+const MAX_SMALL_STARS_DISPLAY = 10;
+const MAX_BIG_STARS_DISPLAY = 35;
 // 繋げた数ともらえる小さい★の数の対応表
 const STAR_REWARDS_TABLE = {
       2: 1,
