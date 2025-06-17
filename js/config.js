@@ -45,6 +45,16 @@ const STAR_REWARDS_TABLE = {
      15: 14,
      16: 15
 };
+// 繋げた数と表示する★の画像の対応表
+const STAR_IMAGE_MAPPING = {
+    2: 'images/star01.png',
+    3: 'images/star02.png',
+    4: 'images/star03.png',
+    5: 'images/star04.png',
+    6: 'images/star05.png',
+    7: 'images/star06.png',
+    8: 'images/star06.png' // 8個以上の場合
+};
 
 
 // --- DOM Element Selections ---

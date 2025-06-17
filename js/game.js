@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let gameStartTime = null;
 
     // --- Star Variables ---
-    let smallStarCount = 0;
+    let smallStars = [];
     let bigStarCount = 0;
 
     /**
@@ -45,22 +45,27 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * 指定された数の★を追加し、表示を更新
      * @param {number} count 追加する★の数
+     * @param {string} imageSrc 表示する★の画像パス
      */
-    function addStars(count) {
+    function addStars(count, imageSrc) {
         if (bigStarCount >= MAX_BIG_STARS_DISPLAY) {
             return; // 大きい★が上限に達していたら何もしない
         }
 
-        smallStarCount += count;
+        for (let i = 0; i < count; i++) {
+            smallStars.push({ src: imageSrc });
+        }
 
-        if (smallStarCount >= MAX_SMALL_STARS_DISPLAY) {
-            const newBigStars = Math.floor(smallStarCount / MAX_SMALL_STARS_DISPLAY);
+        if (smallStars.length >= MAX_SMALL_STARS_DISPLAY) {
+            const newBigStars = Math.floor(smallStars.length / MAX_SMALL_STARS_DISPLAY);
             bigStarCount = Math.min(MAX_BIG_STARS_DISPLAY, bigStarCount + newBigStars);
-            smallStarCount %= MAX_SMALL_STARS_DISPLAY;
+            
+            const remainingSmallStarCount = smallStars.length % MAX_SMALL_STARS_DISPLAY;
+            smallStars.splice(0, smallStars.length - remainingSmallStarCount);
 
             // 大きい★が上限に達した場合、小さい★は0にする
             if (bigStarCount >= MAX_BIG_STARS_DISPLAY) {
-                smallStarCount = 0;
+                smallStars = [];
             }
         }
         updateStarDisplay();
@@ -77,16 +82,16 @@ document.addEventListener('DOMContentLoaded', () => {
         smallStarContainer.innerHTML = '';
         bigStarContainer.innerHTML = '';
 
-        for (let i = 0; i < smallStarCount; i++) {
+        smallStars.forEach(star => {
             const starImg = document.createElement('img');
-            starImg.src = 'images/star01.png';
+            starImg.src = star.src;
             starImg.classList.add('small-star');
             smallStarContainer.appendChild(starImg);
-        }
+        });
 
         for (let i = 0; i < bigStarCount; i++) {
             const starImg = document.createElement('img');
-            starImg.src = 'images/star01.png';
+            starImg.src = 'images/star01.png'; // 大きい★はデザイン固定
             starImg.classList.add('big-star');
             bigStarContainer.appendChild(starImg);
         }
@@ -104,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentMission.target = 0;
         
         // ★の数をリセット
-        smallStarCount = 0;
+        smallStars = [];
         bigStarCount = 0;
         updateStarDisplay();
 
@@ -242,9 +247,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (checkMission()) {
             const clearedCellCount = selectedCells.length;
-            if (STAR_REWARDS_TABLE[clearedCellCount]) {
-                const starsToAdd = STAR_REWARDS_TABLE[clearedCellCount];
-                addStars(starsToAdd);
+            const starsToAdd = STAR_REWARDS_TABLE[clearedCellCount];
+
+            if (starsToAdd) {
+                let imageSrc = STAR_IMAGE_MAPPING[clearedCellCount] || STAR_IMAGE_MAPPING[8];
+                addStars(starsToAdd, imageSrc);
             }
 
             score += clearedCellCount * 10;
