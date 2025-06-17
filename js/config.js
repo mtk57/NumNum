@@ -82,7 +82,16 @@ const startSound = new Howl({ src: ['sounds/start.mp3'] });
 const selectSounds = [ new Howl({ src: ['sounds/se1.mp3'], volume: 0.7 }) ];
 const successSound = new Howl({ src: ['sounds/success.mp3'] });
 const failureSound = new Howl({ src: ['sounds/failure.mp3'] });
-const clearSound = new Howl({ src: ['sounds/clear.mp3'] });
+
+// ★★★ ここから修正 ★★★
+// const clearSound = new Howl({ src: ['sounds/clear.mp3'] }); // 古い定義を削除
+// 消した数に応じた効果音を定義
+const clearSoundChain1 = new Howl({ src: ['sounds/chain01.mp3'] }); // 2-3個
+const clearSoundChain2 = new Howl({ src: ['sounds/chain02.mp3'] }); // 4-5個
+const clearSoundChain3 = new Howl({ src: ['sounds/chain03.mp3'] }); // 6-7個
+const clearSoundChain4 = new Howl({ src: ['sounds/chain04.mp3'] }); // 8個以上
+// ★★★ ここまで修正 ★★★
+
 // 【提案】もし用意できれば、4個以上消した時用の派手な効果音を読み込む
 // const specialClearSound = new Howl({ src: ['sounds/special_clear.mp3'] });
 

@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let smallStars = [];
     let bigStarCount = 0;
 
-    // ★★★ ここから修正 ★★★
     // --- キャラクター表示欄のドラッグスクロール機能 ---
     const bigStarContainer = document.getElementById('big-star-container');
     if (bigStarContainer) {
@@ -58,7 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
             bigStarContainer.scrollLeft = scrollLeft - walk;
         });
     }
-    // ★★★ ここまで修正 ★★★
 
     /**
      * 現在のレベルに応じた難易度設定を取得するヘルパー関数
@@ -484,13 +482,20 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const isSpecialClear = clearedCount >= SPECIAL_CLEAR_THRESHOLD;
 
-            // --- 派手な演出の実行 ---
-            if (isSpecialClear) {
-                // 派手な効果音があればここで再生
-                // if (typeof specialClearSound !== 'undefined') specialClearSound.play();
-                // else clearSound.play();
-                clearSound.play(); // 差し当たり通常のクリア音を再生
+            // ★★★ ここから修正 ★★★
+            // 消した数に応じて効果音を再生
+            if (clearedCount >= 8) {
+                if (typeof clearSoundChain4 !== 'undefined') clearSoundChain4.play();
+            } else if (clearedCount >= 6) {
+                if (typeof clearSoundChain3 !== 'undefined') clearSoundChain3.play();
+            } else if (clearedCount >= 4) {
+                if (typeof clearSoundChain2 !== 'undefined') clearSoundChain2.play();
+            } else if (clearedCount >= 2) {
+                if (typeof clearSoundChain1 !== 'undefined') clearSoundChain1.play();
+            }
 
+            // --- 派手な演出の実行（サウンド再生部分は上のロジックに統合） ---
+            if (isSpecialClear) {
                 // 画面シェイク
                 const gameBoard = document.getElementById('game-board');
                 if (gameBoard) {
@@ -503,9 +508,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     glowLayer.classList.add('flash-effect');
                     setTimeout(() => glowLayer.classList.remove('flash-effect'), 400);
                 }
-            } else {
-                clearSound.play(); // 通常のクリア音
             }
+            // ★★★ ここまで修正 ★★★
 
             const gameContainer = document.getElementById('game-container');
             const gameContainerRect = gameContainer.getBoundingClientRect();
