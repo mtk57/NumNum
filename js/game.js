@@ -21,6 +21,45 @@ document.addEventListener('DOMContentLoaded', () => {
     let smallStars = [];
     let bigStarCount = 0;
 
+    // ★★★ ここから修正 ★★★
+    // --- キャラクター表示欄のドラッグスクロール機能 ---
+    const bigStarContainer = document.getElementById('big-star-container');
+    if (bigStarContainer) {
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        // マウスボタンが押された時の処理
+        bigStarContainer.addEventListener('mousedown', (e) => {
+            isDown = true;
+            bigStarContainer.classList.add('active-scroll');
+            startX = e.pageX - bigStarContainer.offsetLeft;
+            scrollLeft = bigStarContainer.scrollLeft;
+        });
+
+        // マウスがコンテナの外に出た時の処理
+        bigStarContainer.addEventListener('mouseleave', () => {
+            isDown = false;
+            bigStarContainer.classList.remove('active-scroll');
+        });
+
+        // マウスボタンが離された時の処理
+        bigStarContainer.addEventListener('mouseup', () => {
+            isDown = false;
+            bigStarContainer.classList.remove('active-scroll');
+        });
+
+        // マウスが動いた時の処理
+        bigStarContainer.addEventListener('mousemove', (e) => {
+            if (!isDown) return; // マウスが押されていなければ何もしない
+            e.preventDefault();
+            const x = e.pageX - bigStarContainer.offsetLeft;
+            const walk = (x - startX) * 2; // スクロール速度を調整（数値を大きくすると速くなる）
+            bigStarContainer.scrollLeft = scrollLeft - walk;
+        });
+    }
+    // ★★★ ここまで修正 ★★★
+
     /**
      * 現在のレベルに応じた難易度設定を取得するヘルパー関数
      */
@@ -102,14 +141,12 @@ document.addEventListener('DOMContentLoaded', () => {
             bigStarContainer.appendChild(starImg);
         }
 
-        // ★★★ ここから修正 ★★★
         // 新しいキャラクターが追加された後、コンテナを一番右までスクロールさせて最新のキャラが見えるようにする
         // コンテンツの総幅(scrollWidth)がコンテナの表示幅(clientWidth)より大きい場合のみ実行
         if (bigStarContainer.scrollWidth > bigStarContainer.clientWidth) {
              // scrollLeftプロパティに最大のスクロール量を設定することで、末尾に移動
             bigStarContainer.scrollLeft = bigStarContainer.scrollWidth;
         }
-        // ★★★ ここまで修正 ★★★
     }
 
 

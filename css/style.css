@@ -76,17 +76,26 @@ body {
 
 #big-star-container {
     min-height: 37px;
-    /* ★★★ ここから修正 ★★★ */
     overflow-x: auto; /* コンテンツがはみ出た場合に横スクロールを有効にする */
     flex-wrap: nowrap;  /* 画像を折り返さず、一列に並べる */
     justify-content: flex-start; /* 左詰めから表示を開始する */
     -webkit-overflow-scrolling: touch; /* iOSでの慣性スクロールを有効にする */
     scrollbar-width: none; /* Firefoxでスクロールバーを非表示 */
+    cursor: grab; /* ★★★ 追加: ドラッグできることを示すカーソル */
 }
 
 /* Chrome, Safari, Edgeでスクロールバーを非表示にする */
 #big-star-container::-webkit-scrollbar {
     display: none;
+}
+
+/* ★★★ ここから修正 ★★★ */
+/* ドラッグ操作中のカーソルスタイル */
+#big-star-container.active-scroll {
+    cursor: grabbing; /*掴んでいる時のカーソル */
+    cursor: -webkit-grabbing;
+    user-select: none; /* ドラッグ中のテキスト選択を無効化 */
+    -webkit-user-select: none;
 }
 /* ★★★ ここまで修正 ★★★ */
 
