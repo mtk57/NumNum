@@ -93,7 +93,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (let i = 0; i < bigStarCount; i++) {
             const starImg = document.createElement('img');
-            starImg.src = 'images/star01.png'; // 大きい★はデザイン固定
+            // ★修正点: 獲得数に応じてChar001.png, Char002.png...と連番で画像を設定する
+            const imageNumber = String(i + 1).padStart(3, '0');
+            starImg.src = `images/Chara${imageNumber}.png`;
             starImg.classList.add('big-star');
             // アニメーションの開始タイミングをランダムにずらす
             starImg.style.animationDelay = `${Math.random() * 2.5}s`;
