@@ -384,14 +384,22 @@ document.addEventListener('DOMContentLoaded', () => {
         canvasCtx.clearRect(0, 0, lineCanvas.width, lineCanvas.height);
     }
 
-    function createParticles(cell, gameContainer, gameContainerRect, gridContainerRect) {
+    /**
+     * 【変更点】パーティクルを生成する関数。生成する数を引数で受け取れるように変更。
+     * @param {object} cell - パーティクルを発生させるセルオブジェクト
+     * @param {HTMLElement} gameContainer - ゲームコンテナ要素
+     * @param {DOMRect} gameContainerRect - ゲームコンテナの矩形情報
+     * @param {DOMRect} gridContainerRect - グリッドコンテナの矩形情報
+     * @param {number} numParticles - 生成するパーティクルの数
+     */
+    function createParticles(cell, gameContainer, gameContainerRect, gridContainerRect, numParticles) {
         if (!cell) return;
         const offsetX = gridContainerRect.left - gameContainerRect.left;
         const offsetY = gridContainerRect.top - gameContainerRect.top;
         const startX = offsetX + cell.centerX;
         const startY = offsetY + cell.centerY;
 
-        for (let i = 0; i < NUM_PARTICLES_PER_CELL; i++) {
+        for (let i = 0; i < numParticles; i++) {
             const particle = document.createElement('div');
             particle.classList.add('particle');
             const angle = Math.random() * Math.PI * 2;
@@ -412,18 +420,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    /**
+     * 【変更点】クリア処理。4個以上消した際に派手な演出を追加。
+     */
     async function processClearedCells(suppressNewMission = false) {
         isAnimating = true;
         try {
             const cellsToClear = [...selectedCells];
+            const clearedCount = cellsToClear.length; // 消したセルの数を取得
             clearSelection();
-            clearSound.play();
+            
+            const isSpecialClear = clearedCount >= SPECIAL_CLEAR_THRESHOLD;
+
+            // --- 派手な演出の実行 ---
+            if (isSpecialClear) {
+                // 派手な効果音があればここで再生
+                // if (typeof specialClearSound !== 'undefined') specialClearSound.play();
+                // else clearSound.play();
+                clearSound.play(); // 差し当たり通常のクリア音を再生
+
+                // 画面シェイク
+                const gameBoard = document.getElementById('game-board');
+                if (gameBoard) {
+                    gameBoard.classList.add('shake-effect');
+                    setTimeout(() => gameBoard.classList.remove('shake-effect'), 300);
+                }
+
+                // 閃光エフェクト
+                if (glowLayer) {
+                    glowLayer.classList.add('flash-effect');
+                    setTimeout(() => glowLayer.classList.remove('flash-effect'), 400);
+                }
+            } else {
+                clearSound.play(); // 通常のクリア音
+            }
 
             const gameContainer = document.getElementById('game-container');
             const gameContainerRect = gameContainer.getBoundingClientRect();
             const gridContainerRect = gridContainer.getBoundingClientRect();
 
-            cellsToClear.forEach(cell => createParticles(cell, gameContainer, gameContainerRect, gridContainerRect));
+            // パーティクルの数を条件によって変更
+            const particleCount = isSpecialClear ? NUM_PARTICLES_PER_CELL_SPECIAL : NUM_PARTICLES_PER_CELL;
+            cellsToClear.forEach(cell => createParticles(cell, gameContainer, gameContainerRect, gridContainerRect, particleCount));
             
             const removalPromises = cellsToClear.map(cell => {
                 if(cell?.element) {

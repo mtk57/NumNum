@@ -21,8 +21,6 @@ const LEVEL_DIFFICULTY_SETTINGS = [
 const TARGET_MISSIONS_PER_LEVEL = 5;
 const MAX_LEVEL = 5;
 const DEBUG_SHOW_COLLISION_CIRCLES = false;
-const NUM_PARTICLES_PER_CELL = 12;
-const PARTICLE_BASE_SIZE_PX = 12;
 
 // --- ★の表示設定 ---
 const MAX_SMALL_STARS_DISPLAY = 10;
@@ -56,6 +54,12 @@ const STAR_IMAGE_MAPPING = {
     8: 'images/star06.png' // 8個以上の場合
 };
 
+// --- 【変更点】派手な演出に関する設定 ---
+const SPECIAL_CLEAR_THRESHOLD = 4; // この数以上を消すと派手な演出が発動
+const NUM_PARTICLES_PER_CELL = 12; // 通常時のパーティクル数
+const NUM_PARTICLES_PER_CELL_SPECIAL = 25; // 派手な演出時のパーティクル数
+const PARTICLE_BASE_SIZE_PX = 12;
+
 
 // --- DOM Element Selections ---
 const gridContainer = document.getElementById('grid-container');
@@ -75,6 +79,8 @@ const selectSounds = [ new Howl({ src: ['sounds/se1.mp3'], volume: 0.7 }) ];
 const successSound = new Howl({ src: ['sounds/success.mp3'] });
 const failureSound = new Howl({ src: ['sounds/failure.mp3'] });
 const clearSound = new Howl({ src: ['sounds/clear.mp3'] });
+// 【提案】もし用意できれば、4個以上消した時用の派手な効果音を読み込む
+// const specialClearSound = new Howl({ src: ['sounds/special_clear.mp3'] });
 
 // --- タイトル画面のDOM要素 ---
 const titleScreen = document.getElementById('title-screen');
